@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { TextInput, Button, SegmentedButtons, Text, useTheme, Card } from 'react-native-paper';
+import { TextInput, Button, SegmentedButtons, Text, useTheme } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -112,7 +112,7 @@ export const AddTransactionScreen: React.FC = () => {
         name="type"
         render={({ field: { onChange, value } }) => (
           <View style={styles.section}>
-            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
+            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.outline }]}>
               {t('transactions.type')}
             </Text>
             <SegmentedButtons
@@ -123,13 +123,19 @@ export const AddTransactionScreen: React.FC = () => {
                   value: 'GAVE',
                   label: `💰 ${t('transactions.gave').split(' ')[0]}`,
                   checkedColor: '#FFFFFF',
-                  style: value === 'GAVE' ? { backgroundColor: theme.colors.gave } : {},
+                  style: [
+                    styles.segmentedButton,
+                    value === 'GAVE' ? { backgroundColor: theme.colors.gave, borderColor: theme.colors.gave } : { borderColor: theme.colors.border },
+                  ],
                 },
                 {
                   value: 'RECEIVED',
                   label: `💵 ${t('transactions.received').split(' ')[0]}`,
                   checkedColor: '#FFFFFF',
-                  style: value === 'RECEIVED' ? { backgroundColor: theme.colors.received } : {},
+                  style: [
+                    styles.segmentedButton,
+                    value === 'RECEIVED' ? { backgroundColor: theme.colors.received, borderColor: theme.colors.received } : { borderColor: theme.colors.border },
+                  ],
                 },
               ]}
             />
@@ -143,7 +149,7 @@ export const AddTransactionScreen: React.FC = () => {
         name="amount"
         render={({ field: { onChange, value } }) => (
           <View style={styles.section}>
-            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
+            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.outline }]}>
               {t('transactions.amount')}
             </Text>
             <TextInput
@@ -154,8 +160,10 @@ export const AddTransactionScreen: React.FC = () => {
               error={!!errors.amount}
               left={<TextInput.Affix text="₹ " />}
               style={styles.input}
-              outlineColor={typeColor}
+              outlineColor={theme.colors.border}
               activeOutlineColor={typeColor}
+              placeholderTextColor={theme.colors.outline}
+              theme={{ roundness: 12 }}
               placeholder="0"
             />
             {errors.amount && (
@@ -173,7 +181,7 @@ export const AddTransactionScreen: React.FC = () => {
         name="date"
         render={({ field: { onChange, value } }) => (
           <View style={styles.section}>
-            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
+            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.outline }]}>
               {t('transactions.date')}
             </Text>
             <TextInput
@@ -182,8 +190,12 @@ export const AddTransactionScreen: React.FC = () => {
               mode="outlined"
               placeholder="YYYY-MM-DD"
               error={!!errors.date}
-              right={<TextInput.Icon icon="calendar" />}
+              right={<TextInput.Icon icon="calendar" color={theme.colors.primary} />}
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              placeholderTextColor={theme.colors.outline}
+              theme={{ roundness: 12 }}
             />
             {errors.date && (
               <Text style={[styles.error, { color: theme.colors.error }]}>
@@ -200,7 +212,7 @@ export const AddTransactionScreen: React.FC = () => {
         name="note"
         render={({ field: { onChange, value } }) => (
           <View style={styles.section}>
-            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
+            <Text variant="labelLarge" style={[styles.label, { color: theme.colors.outline }]}>
               {t('transactions.note')}
             </Text>
             <TextInput
@@ -210,6 +222,10 @@ export const AddTransactionScreen: React.FC = () => {
               multiline
               numberOfLines={3}
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              placeholderTextColor={theme.colors.outline}
+              theme={{ roundness: 12 }}
               placeholder={t('transactions.notePlaceholder') || 'Add a description...'}
             />
           </View>
@@ -220,7 +236,8 @@ export const AddTransactionScreen: React.FC = () => {
       <View style={styles.buttonRow}>
         <Button
           mode="outlined"
-          style={styles.button}
+          style={[styles.button, { borderColor: theme.colors.border }]}
+          textColor={theme.colors.onSurface}
           onPress={() => navigation.goBack()}
           disabled={loading}
         >
@@ -252,12 +269,15 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 8,
-    fontWeight: '600',
-    fontSize: 13,
+    fontWeight: '700',
+    fontSize: 12,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   input: { backgroundColor: 'transparent' },
+  segmentedButton: {
+    borderRadius: 12,
+  },
   error: {
     fontSize: 12,
     marginTop: 4,
@@ -269,6 +289,8 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: 12,
+    height: 48,
+    justifyContent: 'center',
   },
 });

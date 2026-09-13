@@ -84,8 +84,7 @@ export const ReportsButton: React.FC<ReportsButtonProps> = ({
         styles.banner,
         {
           backgroundColor: theme.colors.primary,
-          shadowColor: theme.colors.primary,
-          opacity: pressed ? 0.92 : 1,
+          opacity: pressed ? 0.94 : 1,
           transform: [{ scale: pressed ? 0.985 : 1 }],
         },
         style,
@@ -93,10 +92,10 @@ export const ReportsButton: React.FC<ReportsButtonProps> = ({
     >
       <View style={styles.bannerAccent} />
       <View style={styles.bannerIconWrap}>
-        <MaterialCommunityIcons name="chart-box-outline" size={26} color="#FFFFFF" />
+        <MaterialCommunityIcons name="chart-box-outline" size={24} color="#FFFFFF" />
       </View>
       <View style={styles.bannerText}>
-        <Text variant="titleSmall" style={styles.bannerTitle}>
+        <Text variant="titleMedium" style={styles.bannerTitle}>
           {t('reports.title')}
         </Text>
         <Text variant="bodySmall" style={styles.bannerSubtitle}>
@@ -104,7 +103,7 @@ export const ReportsButton: React.FC<ReportsButtonProps> = ({
         </Text>
       </View>
       <View style={styles.bannerChevron}>
-        <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />
+        <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" />
       </View>
     </Pressable>
   );
@@ -114,14 +113,14 @@ const styles = StyleSheet.create({
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 12,
-    marginBottom: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 4,
-    shadowOpacity: 0.28,
+    shadowColor: '#4F46E5',
+    shadowOpacity: 0.12,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
@@ -132,16 +131,16 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   bannerIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   bannerText: {
     flex: 1,
@@ -149,17 +148,19 @@ const styles = StyleSheet.create({
   bannerTitle: {
     color: '#FFFFFF',
     fontWeight: '800',
+    fontSize: 16,
     letterSpacing: 0.2,
   },
   bannerSubtitle: {
-    color: 'rgba(255,255,255,0.82)',
+    color: 'rgba(255,255,255,0.85)',
     marginTop: 2,
     fontSize: 12,
+    fontWeight: '500',
   },
   bannerChevron: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -168,28 +169,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingVertical: 7,
-    paddingHorizontal: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1,
     gap: 6,
   },
   pillIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillLabel: {
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 11,
   },
   headerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1,
     marginRight: 8,
@@ -197,6 +198,6 @@ const styles = StyleSheet.create({
   },
   headerLabel: {
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 11,
   },
 });

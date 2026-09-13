@@ -54,32 +54,42 @@ export const BookCard: React.FC<BookCardProps> = ({
   };
 
   return (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} onPress={onPress}>
+    <Card
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          borderWidth: 1,
+        },
+      ]}
+      onPress={onPress}
+      elevation={0}
+    >
       <Card.Content style={styles.content}>
         {/* Top Row: Icon + Title + Menu */}
         <View style={styles.topRow}>
           <View style={[styles.avatar, { backgroundColor: theme.colors.primaryContainer }]}>
             <MaterialCommunityIcons
               name="book-open-page-variant"
-              size={22}
+              size={20}
               color={theme.colors.primary}
             />
           </View>
           <View style={styles.titleBlock}>
-            <Text variant="titleMedium" style={styles.bookName} numberOfLines={1}>
+            <Text variant="titleMedium" style={[styles.bookName, { color: theme.colors.onSurface }]} numberOfLines={1}>
               {book.name}
             </Text>
             {book.description ? (
               <Text
                 variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
+                style={{ color: theme.colors.outline, marginTop: 1 }}
                 numberOfLines={1}
               >
                 {book.description}
               </Text>
             ) : null}
           </View>
-
 
           <Menu
             visible={menuVisible}
@@ -123,60 +133,53 @@ export const BookCard: React.FC<BookCardProps> = ({
               titleStyle={{ color: theme.colors.error }}
             />
           </Menu>
-          
         </View>
 
         {/* Stats Row: Gave | Received | Balance */}
-        <View style={[styles.statsRow, { borderTopColor: theme.colors.surfaceVariant }]}>
+        <View style={[styles.statsRow, { borderTopColor: theme.colors.border }]}>
           <View style={styles.statItem}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              💰 {t('books.totalGave')}
+            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.outline }]}>
+              {t('books.totalGave')}
             </Text>
             <Text variant="titleSmall" style={[styles.statValue, { color: theme.colors.gave }]}>
               {formatCurrency(totalGave)}
             </Text>
           </View>
 
-          <View style={[styles.statDivider, { backgroundColor: theme.colors.surfaceVariant }]} />
+          <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
 
           <View style={styles.statItem}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              💵 {t('books.totalReceived')}
+            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.outline }]}>
+              {t('books.totalReceived')}
             </Text>
             <Text variant="titleSmall" style={[styles.statValue, { color: theme.colors.received }]}>
               {formatCurrency(totalReceived)}
             </Text>
           </View>
 
-          <View style={[styles.statDivider, { backgroundColor: theme.colors.surfaceVariant }]} />
+          <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
 
           <View style={styles.statItem}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              ⚖️ {t('books.balance')}
+            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.outline }]}>
+              {t('books.balance')}
             </Text>
             <Text variant="titleSmall" style={[styles.statValue, { color: balanceColor }]}>
               {balanceText}
             </Text>
-            <Text variant="bodySmall" style={{ color: balanceColor, fontSize: 9, fontWeight: '700' }}>
-              {balanceSub}
-            </Text>
+            <View style={[styles.balanceBadge, { backgroundColor: `${balanceColor}12` }]}>
+              <Text variant="bodySmall" style={{ color: balanceColor, fontSize: 9, fontWeight: '800' }}>
+                {balanceSub}
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Footer Row: contacts + reports + date */}
-        <View style={styles.footerRow}>
-          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+        <View style={[styles.footerRow, { borderTopColor: theme.colors.border }]}>
+          <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
             👥 {t('books.contactsCount', { count: book.contact_count ?? 0 })}
           </Text>
-          {/* <ReportsButton
-            variant="pill"
-            onPress={(e) => {
-              e?.stopPropagation?.();
-              onReports();
-            }}
-            style={styles.reportsPill}
-          /> */}
-          <Text variant="bodySmall" style={{ color: theme.colors.outline }}>
+          <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
             🕒 {formatDate(book.updated_at, 'DD MMM YY')}
           </Text>
         </View>
@@ -188,37 +191,36 @@ export const BookCard: React.FC<BookCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
-    marginVertical: 7,
-    borderRadius: 14,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    marginVertical: 8,
+    borderRadius: 16,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
   },
   content: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
   titleBlock: {
     flex: 1,
   },
   bookName: {
-    fontWeight: '700',
-    fontSize: 16,
+    fontWeight: '800',
+    fontSize: 17,
   },
   menuBtn: {
     margin: -8,
@@ -226,25 +228,38 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    paddingTop: 10,
-    marginBottom: 8,
+    paddingTop: 12,
+    marginBottom: 12,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
   statDivider: {
     width: 1,
-    marginHorizontal: 4,
+    height: 32,
+    alignSelf: 'center',
+    marginHorizontal: 2,
   },
   statValue: {
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 14,
-    marginTop: 2,
+  },
+  balanceBadge: {
+    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 4,
+    borderTopWidth: 1,
+    paddingTop: 8,
   },
 });

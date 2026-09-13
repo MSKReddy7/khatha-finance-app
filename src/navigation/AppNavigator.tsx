@@ -24,13 +24,13 @@ const BooksNavigator = () => {
   const theme = useTheme() as any;
 
   const headerStyle = {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.background,
   };
   const headerOptions = {
     headerStyle,
     headerShadowVisible: false,
     headerTintColor: theme.colors.onSurface,
-    headerTitleStyle: { fontWeight: '700' as const, fontSize: 18 },
+    headerTitleStyle: { fontWeight: '800' as const, fontSize: 20 },
   };
 
   return (
@@ -43,20 +43,8 @@ const BooksNavigator = () => {
       <BooksStack.Screen
         name="BookDetails"
         component={BookDetailsScreen}
-        options={({ route, navigation }) => ({
+        options={({ route }) => ({
           title: route.params.bookName,
-          // headerRight: () => (
-          //   <IconButton
-          //     icon="file-document-outline"
-          //     iconColor={theme.colors.primary}
-          //     onPress={() =>
-          //       navigation.navigate('BookReports', {
-          //         bookId: route.params.bookId,
-          //         bookName: route.params.bookName,
-          //       })
-          //     }
-          //   />
-          // ),
         })}
       />
       <BooksStack.Screen
@@ -92,21 +80,27 @@ export const AppNavigator = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           const iconName = route.name === 'BooksTab' ? 'book-multiple' : 'cog';
-          return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
+          return <MaterialCommunityIcons name={iconName as any} size={size + 2} color={color} />;
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.outline,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.surfaceVariant,
-          paddingTop: 6,
-          elevation: 8,
-          shadowOpacity: 0.1,
-          height: 60 + insets.bottom,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.border,
+          paddingTop: 8,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          height: 64 + (insets.bottom > 0 ? insets.bottom - 10 : 0),
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: -4 },
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
+          fontSize: 11,
+          fontWeight: '700',
+          marginTop: 2,
         },
         headerShown: false,
       })}
@@ -123,10 +117,10 @@ export const AppNavigator = () => {
           tabBarLabel: t('settings.title'),
           headerShown: true,
           headerTitle: t('settings.title'),
-          headerStyle: { backgroundColor: theme.colors.surface },
+          headerStyle: { backgroundColor: theme.colors.background },
           headerShadowVisible: false,
           headerTintColor: theme.colors.onSurface,
-          headerTitleStyle: { fontWeight: '700', fontSize: 18 },
+          headerTitleStyle: { fontWeight: '800', fontSize: 20 },
         }}
       />
     </Tab.Navigator>

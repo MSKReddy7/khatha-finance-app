@@ -36,30 +36,41 @@ export const TransactionListItem: React.FC<TransactionListItemProps> = ({
     <View style={styles.container}>
       {/* Timeline column */}
       <View style={styles.timelineColumn}>
-        <View style={[styles.timelineLine, { backgroundColor: theme.colors.surfaceVariant }]} />
+        <View style={[styles.timelineLine, { backgroundColor: theme.colors.border }]} />
         <View style={[styles.timelineNode, { backgroundColor: color }]}>
-          <MaterialCommunityIcons name={icon} size={14} color="#FFFFFF" />
+          <MaterialCommunityIcons name={icon} size={13} color="#FFFFFF" />
         </View>
       </View>
 
       {/* Card content */}
-      <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            borderWidth: 1,
+          },
+        ]}
+      >
         <View style={styles.cardHeader}>
           <View style={styles.leftBlock}>
             {/* Type badge */}
-            <View style={[styles.typeBadge, { backgroundColor: `${color}18` }]}>
-              <Text style={[styles.typeLabel, { color }]}>{typeLabel}</Text>
+            <View style={[styles.typeBadge, { backgroundColor: `${color}12` }]}>
+              <Text style={[styles.typeLabel, { color, fontWeight: '800' }]}>{typeLabel}</Text>
             </View>
             <Text style={[styles.amount, { color }]}>
               {amountPrefix}{formatCurrency(transaction.amount)}
             </Text>
-            <Text style={[styles.dateText, { color: theme.colors.onSurfaceVariant }]}>
+            <Text style={[styles.dateText, { color: theme.colors.outline }]}>
               {formatTimelineDate(transaction.transaction_date)}
             </Text>
             {transaction.note ? (
-              <Text style={[styles.noteText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
-                {transaction.note}
-              </Text>
+              <View style={[styles.noteContainer, { backgroundColor: theme.colors.background }]}>
+                <Text style={[styles.noteText, { color: theme.colors.subtext }]} numberOfLines={2}>
+                  {transaction.note}
+                </Text>
+              </View>
             ) : null}
           </View>
 
@@ -98,7 +109,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    minHeight: 72,
+    minHeight: 76,
   },
   timelineColumn: {
     alignItems: 'center',
@@ -113,30 +124,29 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   timelineNode: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-    marginTop: 14,
-    elevation: 3,
+    marginTop: 16,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     shadowOffset: { width: 0, height: 1 },
   },
   card: {
     flex: 1,
-    borderRadius: 12,
-    padding: 10,
-    marginVertical: 5,
+    borderRadius: 14,
+    padding: 12,
+    marginVertical: 6,
     marginLeft: 8,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   cardHeader: {
     flexDirection: 'row',
@@ -149,30 +159,34 @@ const styles = StyleSheet.create({
   },
   typeBadge: {
     alignSelf: 'flex-start',
-    borderRadius: 4,
+    borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   typeLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 9,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   amount: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
     marginBottom: 2,
   },
   dateText: {
     fontSize: 11,
-    marginBottom: 4,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  noteContainer: {
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 4,
   },
   noteText: {
     fontSize: 12,
-    fontStyle: 'italic',
-    opacity: 0.8,
+    lineHeight: 16,
   },
   menuBtn: {
     margin: -8,

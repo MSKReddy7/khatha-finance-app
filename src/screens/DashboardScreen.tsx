@@ -81,6 +81,7 @@ export const DashboardScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* a view for the all books given, received, balance */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={

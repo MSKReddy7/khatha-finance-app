@@ -1,5 +1,8 @@
+import { Platform } from 'react-native';
 import { getDb } from '../database/sqlite';
 import { Book, Contact, Transaction, TransactionType } from '../types';
+
+const isWeb = Platform.OS === 'web';
 
 // Simple helper to generate unique IDs since we don't have uuid npm package installed
 const generateId = (): string => {

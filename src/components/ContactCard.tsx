@@ -64,24 +64,35 @@ export const ContactCard: React.FC<ContactCardProps> = ({
     .toUpperCase() || '?';
 
   return (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} onPress={onPress}>
+    <Card
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          borderWidth: 1,
+        },
+      ]}
+      onPress={onPress}
+      elevation={0}
+    >
       <Card.Content style={styles.content}>
         {/* Top: Avatar + Name + Phone + Menu */}
         <View style={styles.topRow}>
           <View style={[styles.avatar, { backgroundColor: theme.colors.primaryContainer }]}>
-            <Text variant="titleSmall" style={[styles.avatarText, { color: theme.colors.primary }]}>
+            <Text variant="titleMedium" style={[styles.avatarText, { color: theme.colors.primary }]}>
               {initials}
             </Text>
           </View>
 
           <View style={styles.nameBlock}>
-            <Text variant="titleSmall" style={styles.name} numberOfLines={1}>
+            <Text variant="titleMedium" style={[styles.name, { color: theme.colors.onSurface }]} numberOfLines={1}>
               {contact.name}
             </Text>
             {contact.phone_number ? (
               <Text
                 variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
+                style={{ color: theme.colors.outline, marginTop: 1 }}
                 numberOfLines={1}
               >
                 📞 {contact.phone_number}
@@ -128,38 +139,40 @@ export const ContactCard: React.FC<ContactCardProps> = ({
         </View>
 
         {/* Balance row: Given | Received | Balance */}
-        <View style={[styles.statsRow, { borderTopColor: theme.colors.surfaceVariant }]}>
+        <View style={[styles.statsRow, { borderTopColor: theme.colors.border }]}>
           <View style={styles.statItem}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              💰 {t('books.totalGave')}
+            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.outline }]}>
+              {t('books.totalGave')}
             </Text>
             <Text style={[styles.statValue, { color: theme.colors.gave }]}>
               {formatCurrency(totalGave)}
             </Text>
           </View>
 
-          <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
           <View style={styles.statItem}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              💵 {t('books.totalReceived')}
+            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.outline }]}>
+              {t('books.totalReceived')}
             </Text>
             <Text style={[styles.statValue, { color: theme.colors.received }]}>
               {formatCurrency(totalReceived)}
             </Text>
           </View>
 
-          <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
           <View style={styles.statItem}>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              ⚖️ {t('books.balance')}
+            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.outline }]}>
+              {t('books.balance')}
             </Text>
             <Text style={[styles.statValue, { color: balanceColor }]}>{balanceText}</Text>
             {balanceSub ? (
-              <Text style={{ fontSize: 9, color: balanceColor, fontWeight: '700' }}>
-                {balanceSub}
-              </Text>
+              <View style={[styles.balanceBadge, { backgroundColor: `${balanceColor}12` }]}>
+                <Text style={{ fontSize: 9, color: balanceColor, fontWeight: '800' }}>
+                  {balanceSub}
+                </Text>
+              </View>
             ) : null}
           </View>
         </View>
@@ -172,50 +185,61 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 16,
     marginVertical: 6,
-    borderRadius: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
+    borderRadius: 16,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
   },
   content: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
-  avatarText: { fontWeight: '700' },
+  avatarText: { fontWeight: '800' },
   nameBlock: { flex: 1 },
-  name: { fontWeight: '700' },
+  name: { fontWeight: '800' },
   actionIcon: { margin: -6 },
   statsRow: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    paddingTop: 8,
+    paddingTop: 10,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
   divider: {
     width: 1,
-    marginHorizontal: 4,
+    height: 28,
+    alignSelf: 'center',
+    marginHorizontal: 2,
   },
   statValue: {
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 13,
-    marginTop: 2,
+  },
+  balanceBadge: {
+    marginTop: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
   },
 });

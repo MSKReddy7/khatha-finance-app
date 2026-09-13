@@ -129,6 +129,10 @@ export const BookReportsScreen: React.FC = () => {
           mode="outlined"
           placeholder="YYYY-MM-DD"
           style={[styles.dateInput, { marginRight: 8 }]}
+          outlineColor={theme.colors.border}
+          activeOutlineColor={theme.colors.primary}
+          placeholderTextColor={theme.colors.outline}
+          theme={{ roundness: 12 }}
         />
         <TextInput
           label={t('reports.endDate')}
@@ -137,6 +141,10 @@ export const BookReportsScreen: React.FC = () => {
           mode="outlined"
           placeholder="YYYY-MM-DD"
           style={styles.dateInput}
+          outlineColor={theme.colors.border}
+          activeOutlineColor={theme.colors.primary}
+          placeholderTextColor={theme.colors.outline}
+          theme={{ roundness: 12 }}
         />
       </View>
 
@@ -147,8 +155,8 @@ export const BookReportsScreen: React.FC = () => {
             mode="outlined"
             compact
             onPress={() => setQuickRange(range)}
-            style={styles.quickRangeBtn}
-            labelStyle={styles.quickRangeLabel}
+            style={[styles.quickRangeBtn, { borderColor: theme.colors.border }]}
+            labelStyle={[styles.quickRangeLabel, { color: theme.colors.onSurface }]}
           >
             {t(`reports.${range}`)}
           </Button>
@@ -156,65 +164,63 @@ export const BookReportsScreen: React.FC = () => {
       </View>
 
       {/* Summary */}
-      <Card style={styles.summaryCard}>
+      <Card
+        style={[
+          styles.summaryCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            borderWidth: 1,
+          },
+        ]}
+        elevation={0}
+      >
         <Card.Content>
-          <Text variant="titleSmall" style={styles.sectionTitle}>
+          <Text variant="titleSmall" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
             {t('reports.rangeSummary')}
           </Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryCol}>
-              <Text variant="bodySmall">{t('books.totalGave')}</Text>
-              <Text variant="titleMedium" style={{ color: theme.colors.gave, fontWeight: 'bold' }}>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
+                {t('books.totalGave')}
+              </Text>
+              <Text variant="titleMedium" style={{ color: theme.colors.gave, fontWeight: '800', marginTop: 4 }}>
                 {formatCurrency(reportTotals.totalGave)}
               </Text>
             </View>
-            <View style={styles.summaryDivider} />
+            <View style={[styles.summaryDivider, { backgroundColor: theme.colors.border }]} />
             <View style={styles.summaryCol}>
-              <Text variant="bodySmall">{t('books.totalReceived')}</Text>
-              <Text variant="titleMedium" style={{ color: theme.colors.received, fontWeight: 'bold' }}>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
+                {t('books.totalReceived')}
+              </Text>
+              <Text variant="titleMedium" style={{ color: theme.colors.received, fontWeight: '800', marginTop: 4 }}>
                 {formatCurrency(reportTotals.totalReceived)}
               </Text>
             </View>
-            <View style={styles.summaryDivider} />
+            <View style={[styles.summaryDivider, { backgroundColor: theme.colors.border }]} />
             <View style={styles.summaryCol}>
-              <Text variant="bodySmall">{t('books.balance')}</Text>
-              <Text variant="titleMedium" style={{ color: balanceColor, fontWeight: 'bold' }}>
+              <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
+                {t('books.balance')}
+              </Text>
+              <Text variant="titleMedium" style={{ color: balanceColor, fontWeight: '800', marginTop: 4 }}>
                 {formatCurrency(Math.abs(netBal))}
               </Text>
-              <Text style={{ fontSize: 9, color: balanceColor, fontWeight: '700' }}>
-                {netBal >= 0 ? t('common.pending') : t('common.extraReceived')}
-              </Text>
+              <View style={[styles.balanceBadge, { backgroundColor: `${balanceColor}12` }]}>
+                <Text style={{ fontSize: 9, color: balanceColor, fontWeight: '800' }}>
+                  {netBal >= 0 ? t('common.pending') : t('common.extraReceived')}
+                </Text>
+              </View>
             </View>
           </View>
         </Card.Content>
       </Card>
 
-      {/* Contact breakdown */}
-      {/* <Text variant="titleMedium" style={styles.sectionHeading}>
-        {t('reports.contactBreakdown')} ({contacts.length})
-      </Text>
-   */}
-      {/* {contacts.length === 0 ? (
-        <EmptyState icon="account-outline" message={t('contacts.emptyState')} />
-      ) : (
-        contacts.map((contact) => (
-          <ContactCard
-            key={contact.id}
-            contact={contact}
-            onPress={() => navigation.navigate('ContactDetails', { contactId: contact.id, bookId })}
-            onEdit={() => navigation.navigate('ContactDetails', { contactId: contact.id, bookId })}
-            onDelete={() => {}}
-            showMenu={false}
-          />
-        ))
-      )} */}
-
       {/* Transactions */}
-      <Text variant="titleMedium" style={[styles.sectionHeading, { marginTop: 16 }]}>
+      <Text variant="titleMedium" style={[styles.sectionHeading, { color: theme.colors.outline, marginTop: 20 }]}>
         {t('reports.transactions')} ({reportTransactions.length})
       </Text>
       {reportTransactions.length === 0 ? (
-        <Text style={styles.emptyText}>{t('reports.noTransactions')}</Text>
+        <Text style={[styles.emptyText, { color: theme.colors.outline }]}>{t('reports.noTransactions')}</Text>
       ) : (
         reportTransactions.map((tx) => {
           const isGave = tx.type === 'GAVE';
@@ -222,18 +228,26 @@ export const BookReportsScreen: React.FC = () => {
           return (
             <Card
               key={tx.id}
-              style={styles.txCard}
+              style={[
+                styles.txCard,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  borderWidth: 1,
+                },
+              ]}
+              elevation={0}
               onPress={() => navigation.navigate('ContactDetails', { contactId: tx.contact_id, bookId })}
             >
               <Card.Content style={styles.txRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: '600' }}>{tx.contact_name}</Text>
-                  <Text style={{ fontSize: 11, opacity: 0.7 }}>
+                  <Text style={{ fontWeight: '800', color: theme.colors.onSurface }}>{tx.contact_name}</Text>
+                  <Text style={{ fontSize: 11, color: theme.colors.outline, marginTop: 2 }}>
                     {formatDate(tx.transaction_date, 'DD MMM YYYY')}
                     {tx.note ? ` • ${tx.note}` : ''}
                   </Text>
                 </View>
-                <Text style={{ color, fontWeight: '800' }}>
+                <Text style={{ color, fontWeight: '800', fontSize: 15 }}>
                   {isGave ? '-' : '+'} {formatCurrency(tx.amount)}
                 </Text>
               </Card.Content>
@@ -247,19 +261,20 @@ export const BookReportsScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 12, paddingBottom: 40 },
-  dateRow: { flexDirection: 'row', marginBottom: 8 },
+  content: { padding: 16, paddingBottom: 40 },
+  dateRow: { flexDirection: 'row', marginBottom: 12 },
   dateInput: { flex: 1, height: 48, backgroundColor: 'transparent' },
-  quickRangeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  quickRangeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
   quickRangeBtn: { borderRadius: 8, margin: 0 },
-  quickRangeLabel: { fontSize: 10 },
-  summaryCard: { elevation: 0.5, borderRadius: 12, marginBottom: 8 },
-  sectionTitle: { fontWeight: '700', marginBottom: 8 },
+  quickRangeLabel: { fontSize: 10, fontWeight: '700' },
+  summaryCard: { borderRadius: 16, marginBottom: 12, shadowColor: '#0F172A', shadowOpacity: 0.02, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
+  sectionTitle: { fontWeight: '800', fontSize: 15, marginBottom: 12 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryCol: { flex: 1, alignItems: 'center' },
-  summaryDivider: { width: 1, height: 24, backgroundColor: 'rgba(0,0,0,0.06)' },
-  sectionHeading: { fontWeight: '700', marginBottom: 8, marginTop: 4 },
-  emptyText: { fontStyle: 'italic', opacity: 0.6, textAlign: 'center', marginVertical: 12 },
-  txCard: { marginBottom: 6, borderRadius: 10, elevation: 0.5 },
-  txRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  summaryDivider: { width: 1, height: 32, alignSelf: 'center', marginHorizontal: 2 },
+  balanceBadge: { marginTop: 4, paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 6 },
+  sectionHeading: { fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, fontSize: 11, marginBottom: 8 },
+  emptyText: { fontStyle: 'italic', textAlign: 'center', marginVertical: 16, fontSize: 14 },
+  txCard: { marginBottom: 8, borderRadius: 12, shadowColor: '#0F172A', shadowOpacity: 0.01, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+  txRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 },
 });

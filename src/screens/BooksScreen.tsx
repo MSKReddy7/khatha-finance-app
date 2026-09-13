@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
-import { TextInput, useTheme, FAB, Portal, Dialog, Button } from 'react-native-paper';
+import { Text, TextInput, useTheme, FAB, Portal, Dialog, Button } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { DatabaseService } from '../services/DatabaseService';
+import { formatCurrency } from '../utils';
 import { useDataStore } from '../store';
 import { Book, BooksStackParamList } from '../types';
 import { BookCard } from '../components/BookCard';
@@ -26,6 +28,11 @@ export const BooksScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [sortOrder, setSortOrder] = useState<'date' | 'name'>('date');
+  const [stats, setStats] = useState({
+    totalBooks: 0,
+    totalGiven: 0,
+    totalReceived: 0,
+  });
 
   // Book dialog state
   const [dialogVisible, setDialogVisible] = useState(false);
@@ -35,8 +42,16 @@ export const BooksScreen: React.FC = () => {
 
   const loadBooks = async () => {
     try {
-      const allBooks = await DatabaseService.getBooks(false);
+      const [allBooks, dashboardStats] = await Promise.all([
+        DatabaseService.getBooks(false),
+        DatabaseService.getDashboardStats(),
+      ]);
       setBooks(allBooks);
+      setStats({
+        totalBooks: dashboardStats.totalBooks,
+        totalGiven: dashboardStats.totalGiven,
+        totalReceived: dashboardStats.totalReceived,
+      });
       applyFilterAndSort(allBooks, searchQuery, sortOrder);
     } catch (error) {
       console.error('Failed to load books:', error);
@@ -135,6 +150,73 @@ export const BooksScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Summary Card: Given | Balance | Received */}
+      <View style={[styles.totalBooksContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+        {/* Header row */}
+        <View style={styles.summaryHeader}>
+          <View style={styles.summaryHeaderLeft}>
+            <MaterialCommunityIcons
+              name="book-multiple"
+              size={18}
+              color={theme.colors.onPrimaryContainer}
+              style={{ marginRight: 6 }}
+            />
+            <Text variant="bodyMedium" style={[styles.summaryHeaderLabel, { color: theme.colors.onPrimaryContainer }]}>
+              {stats.totalBooks} {t('dashboard.totalBooks')}
+            </Text>
+          </View>
+          <MaterialCommunityIcons name="wallet-outline" size={20} color={theme.colors.onPrimaryContainer} />
+        </View>
+
+        {/* Net balance
+        <Text variant="headlineMedium" style={[styles.totalBooksAmount, { color: theme.colors.primary }]}>
+          {formatCurrency(stats.totalGiven - stats.totalReceived)}
+        </Text>
+        <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer, opacity: 0.6, marginBottom: 12 }}>
+          {t('dashboard.netSummary')}
+        </Text> */}
+
+        {/* Divider */}
+        <View style={[styles.summaryDividerHorizontal, { backgroundColor: 'rgba(0,0,0,0.08)' }]} />
+
+        {/* 3-col split: Given | Balance | Received */}
+        <View style={styles.totalBooksSplitRow}>
+          <View style={styles.totalBooksSplitCol}>
+            <MaterialCommunityIcons name="arrow-up-circle-outline" size={16} color={theme.colors.gave} />
+            <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer, marginTop: 2 }}>
+              {t('dashboard.gave')}
+            </Text>
+            <Text variant="titleSmall" style={{ color: theme.colors.gave, fontWeight: '700', marginTop: 2 }}>
+              {formatCurrency(stats.totalGiven)}
+            </Text>
+          </View>
+
+          <View style={styles.totalBooksDividerVertical} />
+
+          <View style={styles.totalBooksSplitCol}>
+            <MaterialCommunityIcons name="scale-balance" size={16} color={theme.colors.primary} />
+            <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer, marginTop: 2 }}>
+              Balance
+            </Text>
+            <Text variant="titleSmall" style={{ color: theme.colors.primary, fontWeight: '700', marginTop: 2 }}>
+              {formatCurrency(Math.abs(stats.totalGiven - stats.totalReceived))}
+            </Text>
+          </View>
+
+          <View style={styles.totalBooksDividerVertical} />
+
+          <View style={styles.totalBooksSplitCol}>
+            <MaterialCommunityIcons name="arrow-down-circle-outline" size={16} color={theme.colors.received} />
+            <Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer, marginTop: 2 }}>
+              {t('dashboard.received')}
+            </Text>
+            <Text variant="titleSmall" style={{ color: theme.colors.received, fontWeight: '700', marginTop: 2 }}>
+              {formatCurrency(stats.totalReceived)}
+            </Text>
+          </View>
+        </View>
+      </View>
+      
       {/* Search and Sort Header */}
       <View style={styles.searchBarContainer}>
         <TextInput
@@ -143,10 +225,15 @@ export const BooksScreen: React.FC = () => {
           onChangeText={setSearchQuery}
           mode="outlined"
           style={styles.searchInput}
-          left={<TextInput.Icon icon="magnify" />}
+          outlineColor={theme.colors.border}
+          activeOutlineColor={theme.colors.primary}
+          placeholderTextColor={theme.colors.outline}
+          theme={{ roundness: 12 }}
+          left={<TextInput.Icon icon="magnify" color={theme.colors.outline} />}
           right={
             <TextInput.Icon
               icon={sortOrder === 'date' ? 'sort-clock-ascending' : 'sort-alphabetical-ascending'}
+              color={theme.colors.primary}
               onPress={() => setSortOrder((prev) => (prev === 'date' ? 'name' : 'date'))}
             />
           }
@@ -188,6 +275,7 @@ export const BooksScreen: React.FC = () => {
                   setBookDesc('');
                   setDialogVisible(true);
                 }}
+                style={{ borderRadius: 10 }}
               >
                 {t('books.addBook')}
               </Button>
@@ -212,8 +300,14 @@ export const BooksScreen: React.FC = () => {
 
       {/* Dialog for Add/Edit */}
       <Portal>
-        <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
-          <Dialog.Title>{editingBook ? t('books.editBook') : t('books.addBook')}</Dialog.Title>
+        <Dialog
+          visible={dialogVisible}
+          onDismiss={() => setDialogVisible(false)}
+          style={{ backgroundColor: theme.colors.surface, borderRadius: 16 }}
+        >
+          <Dialog.Title style={{ fontWeight: '800', fontSize: 20 }}>
+            {editingBook ? t('books.editBook') : t('books.addBook')}
+          </Dialog.Title>
           <Dialog.Content>
             <TextInput
               label={t('books.bookName')}
@@ -221,6 +315,9 @@ export const BooksScreen: React.FC = () => {
               onChangeText={setBookName}
               mode="outlined"
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              theme={{ roundness: 10 }}
               autoFocus
             />
             <TextInput
@@ -231,11 +328,19 @@ export const BooksScreen: React.FC = () => {
               multiline
               numberOfLines={3}
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              theme={{ roundness: 10 }}
             />
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => { setDialogVisible(false); }}>{t('transactions.cancel')}</Button>
-            <Button onPress={handleCreateOrUpdate} disabled={!bookName.trim()}>
+            <Button
+              onPress={handleCreateOrUpdate}
+              disabled={!bookName.trim()}
+              mode="contained"
+              style={{ borderRadius: 8 }}
+            >
               {t('transactions.save')}
             </Button>
           </Dialog.Actions>
@@ -247,14 +352,62 @@ export const BooksScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  searchBarContainer: { padding: 12 },
-  searchInput: { height: 48 },
-  listContent: { paddingBottom: 100 },
+  searchBarContainer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 },
+  searchInput: { height: 48, backgroundColor: 'transparent' },
+  listContent: { paddingBottom: 110, paddingTop: 6 },
   fab: {
     position: 'absolute',
     margin: 16,
     right: 0,
     bottom: 0,
+    borderRadius: 16,
+    elevation: 4,
   },
-  input: { marginBottom: 12 },
+  input: { marginBottom: 12, backgroundColor: 'transparent' },
+  totalBooksContainer: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 16,
+    borderRadius: 20,
+    elevation: 2,
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  summaryHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  summaryHeaderLabel: {
+    fontWeight: '600',
+  },
+  summaryDividerHorizontal: {
+    height: 1,
+    marginBottom: 12,
+  },
+  totalBooksSplitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-start',
+  },
+  totalBooksSplitCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  totalBooksDividerVertical: {
+    width: 1,
+    height: 50,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    alignSelf: 'center',
+  },
+  totalBooksAmount: {
+    fontWeight: '800',
+    marginBottom: 2,
+  },
 });

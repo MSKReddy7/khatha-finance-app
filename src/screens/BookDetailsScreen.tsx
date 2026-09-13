@@ -106,18 +106,26 @@ export const BookDetailsScreen: React.FC = () => {
           contactAddress.trim(),
           contactNotes.trim()
         );
+        resetForm();
+        setDialogVisible(false);
+        triggerRefresh();
       } else {
-        await DatabaseService.createContact(
+        const newContact = await DatabaseService.createContact(
           bookId,
           contactName.trim(),
           contactPhone.trim(),
           contactAddress.trim(),
           contactNotes.trim()
         );
+        resetForm();
+        setDialogVisible(false);
+        triggerRefresh();
+        // Navigate directly to the new contact's detail page
+        navigation.navigate('ContactDetails', {
+          contactId: newContact.id,
+          bookId,
+        });
       }
-      resetForm();
-      setDialogVisible(false);
-      triggerRefresh();
     } catch (error) {
       console.error('Failed to save contact:', error);
     }
@@ -166,9 +174,18 @@ export const BookDetailsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, { backgroundColor: `${theme.colors.gave}14` }]}>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+      {/* <View style={styles.summaryRow}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
             💰 {t('books.totalGave')}
           </Text>
           <Text variant="titleMedium" style={[styles.summaryValue, { color: theme.colors.gave }]}>
@@ -176,8 +193,17 @@ export const BookDetailsScreen: React.FC = () => {
           </Text>
         </View>
 
-        <View style={[styles.summaryCard, { backgroundColor: `${theme.colors.received}14` }]}>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
             💵 {t('books.totalReceived')}
           </Text>
           <Text variant="titleMedium" style={[styles.summaryValue, { color: theme.colors.received }]}>
@@ -185,20 +211,31 @@ export const BookDetailsScreen: React.FC = () => {
           </Text>
         </View>
 
-        <View style={[styles.summaryCard, { backgroundColor: `${balanceColor}14` }]}>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Text variant="bodySmall" style={{ color: theme.colors.outline, fontWeight: '600' }}>
             ⚖️ {t('books.balance')}
           </Text>
           <Text variant="titleMedium" style={[styles.summaryValue, { color: balanceColor }]}>
             {formatCurrency(Math.abs(netBal))}
           </Text>
           {balanceBadge ? (
-            <Text style={{ fontSize: 9, color: balanceColor, fontWeight: '700' }}>
-              {balanceBadge}
-            </Text>
+            <View style={[styles.badgeContainer, { backgroundColor: `${balanceColor}12` }]}>
+              <Text style={{ fontSize: 9, color: balanceColor, fontWeight: '800' }}>
+                {balanceBadge}
+              </Text>
+            </View>
           ) : null}
         </View>
-      </View>
+      </View> */}
 
       <ReportsButton onPress={openReports} variant="banner" />
 
@@ -209,10 +246,15 @@ export const BookDetailsScreen: React.FC = () => {
           onChangeText={setSearchQuery}
           mode="outlined"
           style={styles.searchInput}
-          left={<TextInput.Icon icon="magnify" />}
+          outlineColor={theme.colors.border}
+          activeOutlineColor={theme.colors.primary}
+          placeholderTextColor={theme.colors.outline}
+          theme={{ roundness: 12 }}
+          left={<TextInput.Icon icon="magnify" color={theme.colors.outline} />}
           right={
             <TextInput.Icon
               icon={sortOrder === 'name' ? 'sort-alphabetical-ascending' : 'sort-numeric-descending'}
+              color={theme.colors.primary}
               onPress={() => setSortOrder((p) => (p === 'name' ? 'balance' : 'name'))}
             />
           }
@@ -246,6 +288,7 @@ export const BookDetailsScreen: React.FC = () => {
               <Button
                 mode="contained"
                 onPress={() => { resetForm(); setDialogVisible(true); }}
+                style={{ borderRadius: 10 }}
               >
                 {t('contacts.addContact')}
               </Button>
@@ -263,8 +306,12 @@ export const BookDetailsScreen: React.FC = () => {
       />
 
       <Portal>
-        <Dialog visible={dialogVisible} onDismiss={() => { setDialogVisible(false); resetForm(); }}>
-          <Dialog.Title>
+        <Dialog
+          visible={dialogVisible}
+          onDismiss={() => { setDialogVisible(false); resetForm(); }}
+          style={{ backgroundColor: theme.colors.surface, borderRadius: 16 }}
+        >
+          <Dialog.Title style={{ fontWeight: '800', fontSize: 20 }}>
             {editingContact ? t('contacts.editContact') : t('contacts.addContact')}
           </Dialog.Title>
           <Dialog.Content>
@@ -274,6 +321,9 @@ export const BookDetailsScreen: React.FC = () => {
               onChangeText={setContactName}
               mode="outlined"
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              theme={{ roundness: 10 }}
               autoFocus
             />
             <TextInput
@@ -283,6 +333,9 @@ export const BookDetailsScreen: React.FC = () => {
               mode="outlined"
               keyboardType="phone-pad"
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              theme={{ roundness: 10 }}
             />
             <TextInput
               label={t('contacts.address')}
@@ -290,6 +343,9 @@ export const BookDetailsScreen: React.FC = () => {
               onChangeText={setContactAddress}
               mode="outlined"
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              theme={{ roundness: 10 }}
             />
             <TextInput
               label={t('contacts.notes')}
@@ -299,13 +355,21 @@ export const BookDetailsScreen: React.FC = () => {
               multiline
               numberOfLines={2}
               style={styles.input}
+              outlineColor={theme.colors.border}
+              activeOutlineColor={theme.colors.primary}
+              theme={{ roundness: 10 }}
             />
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => { setDialogVisible(false); resetForm(); }}>
               {t('transactions.cancel')}
             </Button>
-            <Button onPress={handleSaveContact} disabled={!contactName.trim()}>
+            <Button
+              onPress={handleSaveContact}
+              disabled={!contactName.trim()}
+              mode="contained"
+              style={{ borderRadius: 8 }}
+            >
               {t('transactions.save')}
             </Button>
           </Dialog.Actions>
@@ -319,34 +383,48 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   summaryRow: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    gap: 10,
   },
   summaryCard: {
     flex: 1,
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: 'center',
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   summaryValue: {
     fontWeight: '800',
-    marginTop: 4,
+    marginTop: 6,
     fontSize: 15,
+  },
+  badgeContainer: {
+    marginTop: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  searchInput: { flex: 1, height: 48 },
-  listContent: { paddingBottom: 100 },
+  searchInput: { flex: 1, height: 48, backgroundColor: 'transparent' },
+  listContent: { paddingBottom: 110, paddingTop: 4 },
   fab: {
     position: 'absolute',
     margin: 16,
     right: 0,
     bottom: 0,
+    borderRadius: 16,
+    elevation: 4,
   },
-  input: { marginBottom: 8 },
+  input: { marginBottom: 12, backgroundColor: 'transparent' },
 });

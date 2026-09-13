@@ -20,14 +20,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.iconContainer, { backgroundColor: theme.colors.elevation.level1 }]}>
-        <MaterialCommunityIcons name={icon as any} size={48} color={theme.colors.primary} />
+      <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+        <MaterialCommunityIcons name={icon as any} size={44} color={theme.colors.primary} />
       </View>
-      <Text variant="titleMedium" style={styles.message}>
+      <Text variant="titleMedium" style={[styles.message, { color: theme.colors.onSurface }]}>
         {message}
       </Text>
       {subMessage && (
-        <Text variant="bodyMedium" style={[styles.subMessage, { color: theme.colors.onSurfaceVariant }]}>
+        <Text variant="bodyMedium" style={[styles.subMessage, { color: theme.colors.outline }]}>
           {subMessage}
         </Text>
       )}
@@ -41,24 +41,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    minHeight: 250,
+    padding: 32,
+    minHeight: 280,
   },
   iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   message: {
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontWeight: '800',
+    fontSize: 18,
     marginBottom: 8,
   },
   subMessage: {
     textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 24,
   },
   actionContainer: {
