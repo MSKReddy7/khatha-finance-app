@@ -1,343 +1,251 @@
 # Khatha Finance App
 
-A React Native Expo app for managing personal lending and borrowing records. The app helps users create books, add contacts, record transactions like money given or received, track balances, and export/import backup data.
+A production-ready, offline-first personal financial ledger mobile application built with React Native and Expo. Khatha Finance helps individuals, families, and business owners record money lent and borrowed, manage multi-party books and contacts, track net balances, and automatically synchronize backups to Google Drive across multiple devices with zero friction.
 
-This project is built with Expo SDK 56, React Native 0.86.3, TypeScript, SQLite, and React Navigation.
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Google Drive Cloud Backup (Zero-Touch)](#google-drive-cloud-backup-zero-touch)
+- [Building Standalone APK](#building-standalone-apk)
+- [Database & Offline-First Design](#database--offline-first-design)
+- [Localization & Theming](#localization--theming)
+- [Documentation & Policies](#documentation--policies)
+- [License](#license)
+
+---
 
 ## Overview
 
-The app is organized around a simple accounting workflow:
+Khatha Finance provides a fast, offline-first double-entry style ledger tracking workflow:
 
-- Create one or more books for different groups or people
-- Add contacts inside each book
-- Record transactions as either GAVE or RECEIVED
-- View contact-level and book-level summaries
-- Search, filter, and sort records
-- Archive books instead of permanently deleting them
-- Switch between English, Hindi, and Telugu
-- Choose light/dark/system theme
-- Export and import backup JSON files
+- **Books:** Organize transactions into books (e.g., Personal, Family, Business, Rental).
+- **Contacts:** Maintain customer/contact records with contact details, notes, and live balances.
+- **Transactions:** Record amounts given or received with custom timestamps, notes, and audit trails.
+- **Reporting:** Real-time dashboards, top debtors/creditors, and net position summaries.
+- **Cloud Backup:** Automatic, zero-touch sync to Google Drive without requiring user login prompts on family devices.
 
-## Tech Stack
-
-- Expo SDK 56
-- React Native 0.86.3
-- React 19.2.3
-- TypeScript 6.0.3
-- SQLite via expo-sqlite
-- React Navigation
-- Zustand for local state
-- AsyncStorage for persistent settings
-- React Native Paper for UI components
-- i18next for translations
-- Expo File System / Sharing / Document Picker for backup operations
+---
 
 ## Features
 
-### Book management
+### 📒 Book & Contact Management
+- Create, edit, search, filter, and archive multiple books.
+- Add contacts under specific books with phone numbers, addresses, and transaction notes.
+- Instant net balance calculation (You will give / You will receive).
 
-- Create, edit, archive, restore, and delete books
-- View total summaries for each book
-- Search books by name
-- Sort books by date or alphabetically
+### 💸 Transaction Tracking
+- Quick entry for **GAVE** (Debit) and **RECEIVED** (Credit).
+- Timestamping, notes, and detailed transaction history per contact.
+- Instant recalculation of book totals and dashboard analytics.
 
-### Contact management
+### ☁️ Automated Google Drive Cloud Backup (Zero-Touch)
+- **Direct REST API v3:** No intermediate third-party servers; direct device-to-Google Drive communication.
+- **Zero-Touch Background Mode:** All family devices sync to a single central Google Drive without requiring individual Google logins.
+- **SHA-256 Change Detection:** Deterministic hashing prevents redundant uploads when no data changes.
+- **Sequence Coordinator:** Global sequential ID allocation (`{id} {deviceName} {timestamp}.json`) via an optimistic concurrency manifest (`_khatha_backup_sequence.json`).
+- **Device-Aware Retention:** Keeps the 10 most recent backups per device while protecting other devices' data.
+- **Atomic Restore & Rollback:** Safe SQLite restoration with automatic rollback safeguards.
 
-- Add contacts under a selected book
-- Store phone number, address, and notes
-- Calculate each contact’s net balance and totals
-- Delete and edit contact records
+### 🌐 Localization & Customization
+- **Multi-Language:** English (`en`), Hindi (`hi`), and Telugu (`te`).
+- **Adaptive Theme:** Light, Dark, and System modes with customized color palettes.
 
-### Transaction tracking
+---
 
-- Record transactions with type: GAVE or RECEIVED
-- Store amount, note, and transaction date
-- Sort and review transaction history
-- View totals across each book and contact
+## Tech Stack
 
-### Reporting and dashboard
+| Component | Technology | Version |
+| :--- | :--- | :--- |
+| **Framework** | Expo SDK / React Native | SDK 57 / React Native 0.86.3 |
+| **Language** | TypeScript | 6.0.3 |
+| **Database** | SQLite via `expo-sqlite` | Modern Async API |
+| **State Management** | Zustand & AsyncStorage | Offline-first local store |
+| **UI Components** | React Native Paper & Vector Icons | Material Design 3 |
+| **Navigation** | React Navigation | Native Stacks & Bottom Tabs |
+| **Cloud Sync** | Google Drive REST API v3 | OAuth 2.0 with PKCE & Zero-Touch |
+| **Build Tool** | Expo Application Services (EAS) | Standalone Android APK builds |
 
-- Dashboard totals for books, contacts, and amount summaries
-- View top debtors / pending balances
-- Book-level reports and balance calculations
-
-### Settings and preferences
-
-- Select language: English, Hindi, Telugu
-- Switch between light, dark, and system theme
-- Manage archived books
-- Export and import database backups as JSON
+---
 
 ## Project Structure
 
 ```text
-.
-├── App.tsx
-├── app.json
-├── eas.json
-├── index.ts
-├── package.json
-├── tsconfig.json
-├── README.md
-├── assets/
-│   ├── favicon.png
-│   ├── hell.png
-│   ├── splash-icon.png
-│   └── ...
+khatha-finance-app/
+├── App.tsx                                  # App root & providers
+├── index.ts                                 # Metro entry point
+├── app.json                                 # Expo configuration
+├── eas.json                                 # EAS Build profiles (preview APK, production)
+├── .easignore                               # Files excluded from cloud builds
+├── .gitignore                               # Git ignore configuration
+├── cloud-credentials.example.json           # Template for root credentials
+├── PRIVACY_POLICY.md                        # Official Privacy Policy
+├── TERMS_OF_SERVICE.md                      # Official Terms of Service
+├── README.md                                # Comprehensive project guide
+│
+├── assets/                                  # App icons, splash screens, and images
+│
+├── docs/                                    # Technical architecture documentation
+│   └── google-drive-backup-setup.md         # Detailed Google OAuth & Cloud Backup guide
+│
 ├── src/
-│   ├── components/
-│   ├── database/
-│   ├── hooks/
-│   ├── navigation/
-│   ├── screens/
-│   ├── services/
-│   ├── store/
-│   ├── theme/
-│   ├── translations/
-│   ├── types/
-│   └── utils/
-└── ...
+│   ├── components/                          # Reusable UI components (Cards, Modals, Inputs)
+│   ├── database/                            # SQLite initialization & schema definitions
+│   │   └── sqlite.ts
+│   ├── hooks/                               # Custom React hooks
+│   ├── navigation/                          # React Navigation stacks & tabs
+│   │   └── AppNavigator.tsx
+│   ├── screens/                             # Application views
+│   │   ├── DashboardScreen.tsx
+│   │   ├── BooksScreen.tsx
+│   │   ├── ContactsScreen.tsx
+│   │   ├── TransactionsScreen.tsx
+│   │   ├── ReportsScreen.tsx
+│   │   ├── SettingsScreen.tsx
+│   │   └── CloudBackupScreen.tsx            # Google Drive backup & restore management
+│   ├── scripts/                             # Utility scripts
+│   │   └── get-refresh-token.js             # Helper to generate permanent Google Refresh Tokens
+│   ├── services/                            # Application business logic
+│   │   ├── DatabaseService.ts               # Core SQLite queries & transactions
+│   │   ├── BackupService.ts                 # Offline JSON export & import
+│   │   ├── ExportService.ts                 # File sharing & export helpers
+│   │   ├── ReportService.ts                 # Balance & report calculations
+│   │   └── cloudBackup/                     # Google Drive Cloud Backup Subsystem
+│   │       ├── CloudBackupManager.ts        # Orchestrator & mutation listeners
+│   │       ├── DatabaseSnapshot.ts          # Deterministic serialization & SHA-256
+│   │       ├── DeviceIdentity.ts            # Unique device UUID & friendly name
+│   │       ├── GoogleAuthService.ts         # Token refresh & OAuth flows
+│   │       ├── GoogleDriveService.ts        # Direct REST API v3 multipart upload/download
+│   │       ├── RetentionService.ts          # Per-device backup pruning (keep latest 10)
+│   │       ├── SequenceCoordinator.ts       # Global sequence allocation with ETags
+│   │       ├── config.ts                    # Cloud backup configuration & endpoints
+│   │       ├── localCredentials.example.ts  # TypeScript credential template
+│   │       └── types.ts                     # TypeScript interfaces
+│   ├── store/                               # Zustand stores
+│   │   ├── index.ts                         # Core app state
+│   │   └── cloudBackupStore.ts              # Backup connection & sync state
+│   ├── theme/                               # Color tokens & theme definition
+│   ├── translations/                        # i18n localization resources
+│   │   ├── en.json
+│   │   ├── hi.json
+│   │   └── te.json
+│   ├── types/                               # Global TypeScript models
+│   └── utils/                               # Formatters, currency, and date helpers
+│
+└── tests/                                   # Automated test suite
+    ├── run-all-tests.ts                     # 21-point test suite for cloud backup
+    └── mocks/                               # React Native & storage mocks
 ```
 
-### Key files
+---
 
-- `App.tsx`: App bootstrap, splash screen handling, SQLite provider, theme, and navigation setup
-- `src/database/sqlite.ts`: SQLite schema creation and initialization
-- `src/services/DatabaseService.ts`: CRUD logic for books, contacts, and transactions
-- `src/services/BackupService.ts`: Export/import backup support
-- `src/store/index.ts`: Zustand store for app settings and refresh state
-- `src/navigation/AppNavigator.tsx`: Tab and stack navigation structure
-- `src/translations/index.ts`: i18n setup with English/Hindi/Telugu resources
-- `src/theme/index.ts`: custom app themes
-- `app.json`: Expo app metadata and native config
-- `eas.json`: EAS build profiles for development, preview, and production
+## Quick Start
 
-## Installation
+### 1. Prerequisites
+- Node.js (v18 or higher recommended)
+- npm or yarn
+- Expo Go on your Android / iOS device (or an Android emulator)
 
-Make sure Node.js is installed. This app targets Expo SDK 56, which expects Node 20.19.x or newer as a practical minimum.
-
-1. Clone the repository.
-2. Open the project folder.
-3. Install dependencies:
-
+### 2. Installation
 ```bash
+# Clone repository
+git clone https://github.com/MSKReddy7/khatha-finance-app.git
+cd khatha-finance-app
+
+# Install dependencies
 npm install
+
+# Typecheck codebase
+npm run typecheck
 ```
 
-If you prefer Yarn:
-
+### 3. Launch Development Server
 ```bash
-yarn install
+npm start
 ```
+Scan the QR code with **Expo Go** on Android or camera on iOS.
 
-## Running the App
+---
 
-### Start the Expo development server
+## Google Drive Cloud Backup (Zero-Touch)
 
+Khatha Finance allows all family members or multiple devices to sync to **one central Google Drive** without requiring each device to log in.
+
+### Step 1: Create OAuth Credentials in Google Cloud
+1. Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
+2. Enable the **Google Drive API**.
+3. Under **OAuth consent screen**, set **Publishing status** to **In production** (*Publish App*). This ensures your refresh token **never expires**.
+4. Create an OAuth Client ID with Application type: **Desktop application**.
+5. Download the client secret JSON file or note down your `client_id` and `client_secret`.
+
+### Step 2: Generate Permanent Refresh Token (Automatic)
+Drop your downloaded `client_secret_*.json` into the root folder of this project and run:
 ```bash
-npm run start
+node src/scripts/get-refresh-token.js
 ```
+- Your default web browser will open to Google's sign-in screen.
+- Log in to your central Google Account once and click **Allow**.
+- The script automatically captures your permanent refresh token and updates:
+  - `cloud-credentials.json` (in root)
+  - `src/services/cloudBackup/localCredentials.ts`
 
-Or directly:
+*(Manual alternative: Copy [`cloud-credentials.example.json`](./cloud-credentials.example.json) to `cloud-credentials.json` or [`src/services/cloudBackup/localCredentials.example.ts`](./src/services/cloudBackup/localCredentials.example.ts) to `localCredentials.ts` and paste your credentials).*
 
-```bash
-npx expo start
+### Step 3: Verify in App
+Restart or reload the app (`r` in the terminal). Open **Settings → Google Drive Cloud Backup**. You will see:
+```text
+✓ Google Drive (Family Cloud) · Active
 ```
+Tap **"Back Up Now"** or record any transaction — it will sync directly to the `Khatha Finance Backups` folder in your Google Drive!
 
-### Run on Android
+---
 
-```bash
-npm run android
-```
+## Building Standalone APK
 
-### Run on iOS
-
-```bash
-npm run ios
-```
-
-### Run in web mode
+To create an installable `.apk` file that you can send directly to family members via WhatsApp or Telegram:
 
 ```bash
-npm run web
-```
-
-## Common Expo Commands
-
-```bash
-npx expo start --clear
-npx expo install
-npx expo doctor
-```
-
-## Build Commands
-
-This project includes EAS configuration in `eas.json`.
-
-### Development build
-
-```bash
-npx eas build --platform android --profile development
-```
-
-```bash
-npx eas build --platform ios --profile development
-```
-
-### Preview build
-
-```bash
+# Build standalone preview APK
 npx eas build --platform android --profile preview
 ```
 
-```bash
-npx eas build --platform ios --profile preview
-```
+When the build finishes, EAS provides a **direct download link** to the `.apk` file. 
 
-### Production build
+When installed on any phone, the APK connects automatically to your central Google Drive with **Zero Login Prompts**!
 
-```bash
-npx eas build --platform android --profile production
-```
+---
 
-```bash
-npx eas build --platform ios --profile production
-```
+## Database & Offline-First Design
 
-### Build for both platforms
+All financial data is stored locally on the device in an encrypted SQLite database:
+- **`books`**: Book metadata, archiving status, and timestamps.
+- **`contacts`**: Multi-currency balances, contact info, and notes.
+- **`transactions`**: Double-entry records with foreign keys referencing books and contacts.
 
-```bash
-npx eas build --platform all --profile production
-```
+Database schema initialization runs automatically on launch via `src/database/sqlite.ts`. Every SQLite mutation triggers an automated background cloud backup with a 3-second debounce to prevent redundant network requests.
 
-> If EAS is not configured on your machine yet, you may need to log in first:
->
-> ```bash
-> npx eas login
-> ```
+---
 
-## App Database
+## Localization & Theming
 
-The app stores data locally in a SQLite database named:
+- **Supported Languages:** English (`en`), Hindi (`hi`), Telugu (`te`). Change language at any time in **Settings → Language**.
+- **Themes:** Light, Dark, System. Implemented with React Native Paper MD3 palettes.
 
-```text
-khatha.db
-```
+---
 
-Database schema includes:
+## Documentation & Policies
 
-- books
-- contacts
-- transactions
+- 📖 [Google Drive Backup Technical Architecture](docs/google-drive-backup-setup.md)
+- 🔒 [Privacy Policy](PRIVACY_POLICY.md)
+- 📜 [Terms of Service](TERMS_OF_SERVICE.md)
 
-The initialization logic is in `src/database/sqlite.ts` and runs when the app starts through the SQLite provider in `App.tsx`.
-
-## Backup and Restore
-
-The app supports both offline file export/import and automated Google Drive Cloud Backup.
-
-### 1. Google Drive Cloud Backup (Zero-Touch Multi-Device)
-
-Khatha Finance includes a production-grade, zero-touch Google Drive backup system:
-- **Direct Drive REST API v3 Integration:** Connects directly from the device to Google Drive under the minimal `drive.file` scope.
-- **Zero-Touch Background Mode:** All family devices sync automatically to a central Google Drive without prompting any family member to sign in.
-- **SHA-256 Change Detection:** Calculates a deterministic hash of all tables and skips uploading if no financial mutations occurred.
-- **Sequential Global IDs:** Coordinates IDs (`{id} {deviceName} {timestamp}.json`) via an optimistic concurrency manifest (`_khatha_backup_sequence.json`).
-- **Per-Device Retention Policy:** Retains the 10 most recent backups for each device while protecting other devices' backups.
-- **Atomic Replace & Rollback:** When restoring from cloud, SQLite replaces the database atomically with an automatic rollback safeguard if restore fails.
-
-#### Setting up Google Drive Backup after Cloning
-
-When you clone this repository to a new computer:
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Set up Google Cloud OAuth Credentials:**
-   - Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
-   - Create an OAuth 2.0 Client ID of type **Desktop application**.
-   - Download the client secret JSON file or note down your `client_id` and `client_secret`.
-   - Make sure your project's OAuth Consent screen is set to **In production** (Publish App) so your tokens never expire.
-
-3. **Configure the credentials (Choose Option A or B):**
-
-   - **Option A (Automatic - Recommended):**
-     Place the downloaded `client_secret_*.json` into the root folder of this project and run:
-     ```bash
-     node src/scripts/get-refresh-token.js
-     ```
-     Your browser will open. Log in to your central Google Account once and click **Allow**. The script will automatically generate your permanent Refresh Token and save it to both `cloud-credentials.json` and `src/services/cloudBackup/localCredentials.ts`!
-
-   - **Option B (Manual template copy):**
-     Copy either of the template files:
-     ```bash
-     cp cloud-credentials.example.json cloud-credentials.json
-     # or
-     cp src/services/cloudBackup/localCredentials.example.ts src/services/cloudBackup/localCredentials.ts
-     ```
-     Then open the file and fill in your `clientId`, `clientSecret`, and `refreshToken`.
-
-4. **Run the App:**
-   ```bash
-   npm start
-   ```
-   Open **Settings → Google Drive Cloud Backup**. You will see:
-   ```text
-   ✓ Google Drive (Family Cloud) · Active
-   ```
-
-5. **Build APK for Family Members:**
-   ```bash
-   npx eas build --platform android --profile preview
-   ```
-   EAS will compile an installable `.apk` file with the zero-touch credentials pre-bundled. Share the download link or `.apk` on WhatsApp or Telegram with your family!
-
-### 2. Manual JSON File Export & Import (Offline)
-
-- **Export backup:** From the Settings screen, choose Export. The app writes a canonical JSON snapshot and shares it via the native share sheet.
-- **Import backup:** From the Settings screen, choose Import. The app restores books, contacts, and transactions into SQLite.
-
-## Localization
-
-Supported languages:
-
-- English (`en`)
-- Hindi (`hi`)
-- Telugu (`te`)
-
-Translation files are located here:
-
-- `src/translations/en.json`
-- `src/translations/hi.json`
-- `src/translations/te.json`
-
-## Theme Support
-
-The app supports:
-
-- Light mode
-- Dark mode
-- System mode
-
-Theme configuration is defined in `src/theme/index.ts` and applied through `useAppTheme`.
-
-## Notes
-
-- The project intentionally keeps data local to the device and does not require a backend service.
-- A local SQLite database is used for quick offline access and storage.
-- The app uses the Expo splash screen and initializes the database before showing the main UI.
-
-## Recommended Development Flow
-
-```bash
-npm install
-npm run start
-```
-
-Then use the Expo dev client or simulator to test features.
+---
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
