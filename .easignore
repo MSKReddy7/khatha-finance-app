@@ -1,0 +1,9 @@
+# EAS Build ignore file
+node_modules/
+.git/
+.expo/
+tests/
+docs/
+client_secret_*.json
+credentials.json
+credentials/
