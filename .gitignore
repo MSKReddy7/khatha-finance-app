@@ -40,10 +40,13 @@ yarn-error.*
 /ios
 /android
 
-# Google OAuth secrets & keystores
+# Google OAuth secrets — single source of truth (cloud-credentials.json) stays local
 client_secret_*.json
 credentials.json
+credentials/
 cloud-credentials.json
+!cloud-credentials.example.json
 src/services/cloudBackup/localCredentials.ts
+
 
 

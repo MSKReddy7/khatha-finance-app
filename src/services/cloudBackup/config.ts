@@ -5,24 +5,12 @@ let localCreds: {
   expoGoClientId?: string;
 } = {};
 
+// Single source of truth: cloud-credentials.json in project root
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mod = require('./localCredentials');
-  if (mod && mod.LOCAL_CREDENTIALS) {
-    localCreds = mod.LOCAL_CREDENTIALS;
-  }
+  localCreds = require('../../../cloud-credentials.json');
 } catch (e) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    localCreds = require('../../../cloud-credentials.json');
-  } catch (e2) {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      localCreds = require('../../../credentials/cloud-credentials.json');
-    } catch (e3) {
-      // Clean clone fallback
-    }
-  }
+  // No credentials configured — cloud backup disabled until setup
 }
 
 export const CLOUD_BACKUP_CONFIG = {

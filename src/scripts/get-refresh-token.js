@@ -1,9 +1,17 @@
 /**
- * Helper script to generate a Google Drive Refresh Token for your central backup account.
- * Supports Desktop/Installed clients with PKCE and automatic loopback.
+ * Khatha Finance — Google Drive Refresh Token Generator
+ *
+ * This script reads credentials from any of these sources (in priority order):
+ *   1. client_secret_*.json in the project root (downloaded from Google Cloud Console)
+ *   2. cloud-credentials.json in the project root
+ *
+ * On success it OVERWRITES cloud-credentials.json with:
+ *   { clientId, clientSecret, refreshToken }
+ *
+ * The mobile app (config.ts) reads ONLY from cloud-credentials.json.
  *
  * Usage:
- *   node scripts/get-refresh-token.js
+ *   node src/scripts/get-refresh-token.js
  */
 const http = require('http');
 const https = require('https');
@@ -18,61 +26,66 @@ console.log('🔑 KHATHA FINANCE: GOOGLE REFRESH TOKEN GENERATOR');
 console.log('============================================================\n');
 
 const ROOT_DIR = path.join(__dirname, '..', '..');
+const CLOUD_CREDS_PATH = path.join(ROOT_DIR, 'cloud-credentials.json');
 
-// Detect Client credentials from cloud-credentials.json, credentials/cloud-credentials.json, or downloaded client_secret JSONs
 let detectedClientId = '';
 let detectedClientSecret = '';
 
-// 1. Check root cloud-credentials.json
+// Priority 1: Scan for client_secret_*.json files (Google Cloud Console downloads)
 try {
-  const credPath = path.join(ROOT_DIR, 'cloud-credentials.json');
-  if (fs.existsSync(credPath)) {
-    const creds = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
-    if (creds.clientId && !creds.clientId.startsWith('YOUR_')) detectedClientId = creds.clientId;
-    if (creds.clientSecret && !creds.clientSecret.startsWith('YOUR_')) detectedClientSecret = creds.clientSecret;
+  const rootFiles = fs.readdirSync(ROOT_DIR);
+  const secretFiles = rootFiles.filter((f) => f.startsWith('client_secret_') && f.endsWith('.json'));
+  for (const sf of secretFiles) {
+    const raw = fs.readFileSync(path.join(ROOT_DIR, sf), 'utf-8');
+    const parsed = JSON.parse(raw);
+    const clientConfig = parsed.installed || parsed.web;
+    if (clientConfig && clientConfig.client_id && clientConfig.client_secret) {
+      detectedClientId = clientConfig.client_id;
+      detectedClientSecret = clientConfig.client_secret;
+      console.log(`✓ Loaded credentials from ${sf}`);
+      // Immediately overwrite cloud-credentials.json with these credentials
+      try {
+        let existing = {};
+        if (fs.existsSync(CLOUD_CREDS_PATH)) {
+          try { existing = JSON.parse(fs.readFileSync(CLOUD_CREDS_PATH, 'utf-8')); } catch (_) {}
+        }
+        existing.clientId = detectedClientId;
+        existing.clientSecret = detectedClientSecret;
+        // Preserve existing refreshToken if it's still valid for the same clientId
+        if (existing.clientId !== detectedClientId) {
+          delete existing.refreshToken;
+        }
+        fs.writeFileSync(CLOUD_CREDS_PATH, JSON.stringify(existing, null, 2), 'utf-8');
+        console.log(`✓ Synced credentials to cloud-credentials.json`);
+      } catch (e) {}
+      break;
+    }
   }
-} catch (e) {}
+} catch (e) { /* ignore */ }
 
-// 2. Check credentials/cloud-credentials.json fallback
+// Priority 2: Fall back to existing cloud-credentials.json
 if (!detectedClientId || !detectedClientSecret) {
   try {
-    const credPath = path.join(ROOT_DIR, 'credentials', 'cloud-credentials.json');
-    if (fs.existsSync(credPath)) {
-      const creds = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
-      if (creds.clientId && !creds.clientId.startsWith('YOUR_')) detectedClientId = creds.clientId;
-      if (creds.clientSecret && !creds.clientSecret.startsWith('YOUR_')) detectedClientSecret = creds.clientSecret;
+    if (fs.existsSync(CLOUD_CREDS_PATH)) {
+      const creds = JSON.parse(fs.readFileSync(CLOUD_CREDS_PATH, 'utf-8'));
+      if (creds.clientId && !creds.clientId.startsWith('YOUR_')) {
+        detectedClientId = creds.clientId;
+        detectedClientSecret = creds.clientSecret || '';
+        console.log('✓ Loaded credentials from cloud-credentials.json');
+      }
     }
   } catch (e) {}
 }
 
-// 3. Scan for client_secret JSON with client_secret present if not yet found
-if (!detectedClientId || !detectedClientSecret) {
-  try {
-    const rootFiles = fs.readdirSync(ROOT_DIR);
-    const secretFiles = rootFiles.filter((f) => f.startsWith('client_secret_') && f.endsWith('.json'));
-    for (const sf of secretFiles) {
-      const raw = fs.readFileSync(path.join(ROOT_DIR, sf), 'utf-8');
-      const parsed = JSON.parse(raw);
-      const clientConfig = parsed.installed || parsed.web;
-      if (clientConfig && clientConfig.client_secret) {
-        detectedClientId = clientConfig.client_id;
-        detectedClientSecret = clientConfig.client_secret;
-        console.log(`✓ Loaded credentials from ${sf}`);
-        break;
-      }
-    }
-  } catch (e) {
-    // ignore
-  }
+if (!detectedClientId) {
+  console.error('❌ ERROR: No credentials found!');
+  console.error('   Place your downloaded client_secret_*.json in the project root and re-run.');
+  process.exit(1);
 }
 
 // Generate PKCE code_verifier and code_challenge
 function base64UrlEncode(buffer) {
-  return buffer
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 const codeVerifier = base64UrlEncode(crypto.randomBytes(32));
@@ -81,7 +94,6 @@ const codeChallenge = base64UrlEncode(
 );
 
 const PORT = 8085;
-// For Google Desktop credentials with ["http://localhost"], Google requires http://localhost:PORT
 const REDIRECT_URI = `http://localhost:${PORT}`;
 const SCOPE = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
@@ -99,11 +111,11 @@ const authParams = new URLSearchParams({
 const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${authParams.toString()}`;
 
 console.log(`Client ID:     ${detectedClientId}`);
-console.log(`Client Secret: ${detectedClientSecret ? '✓ Detected' : 'none'}`);
+console.log(`Client Secret: ${detectedClientSecret ? '✓ Detected' : '✗ MISSING'}`);
 console.log(`Redirect URI:  ${REDIRECT_URI}\n`);
 
 console.log('1. Starting local listener and opening your browser...');
-console.log(`If browser does not open automatically, visit this URL:\n\n${authUrl}\n`);
+console.log(`If browser does not open automatically, visit:\n\n${authUrl}\n`);
 
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -126,25 +138,18 @@ const server = http.createServer((req, res) => {
       server.close();
       console.log('2. Authorization code received! Exchanging for Refresh Token...\n');
 
-      const tokenParams = {
-        code: code,
+      const postData = new URLSearchParams({
+        code,
         client_id: detectedClientId,
         client_secret: detectedClientSecret,
         redirect_uri: REDIRECT_URI,
         grant_type: 'authorization_code',
         code_verifier: codeVerifier,
-      };
-
-      const postData = new URLSearchParams(tokenParams).toString();
+      }).toString();
 
       const tokenReq = https.request(
         'https://oauth2.googleapis.com/token',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        },
+        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
         (tokenRes) => {
           let data = '';
           tokenRes.on('data', (chunk) => (data += chunk));
@@ -157,33 +162,19 @@ const server = http.createServer((req, res) => {
                 console.log('============================================================\n');
                 console.log(`REFRESH_TOKEN: ${json.refresh_token}\n`);
 
-                // Auto-update root cloud-credentials.json
+                // Write EVERYTHING to cloud-credentials.json (the single source of truth)
                 try {
-                  const credPath = path.join(ROOT_DIR, 'cloud-credentials.json');
-                  let existing = {};
-                  if (fs.existsSync(credPath)) {
-                    try { existing = JSON.parse(fs.readFileSync(credPath, 'utf-8')); } catch (e) {}
-                  }
-                  existing.clientId = detectedClientId;
-                  existing.clientSecret = detectedClientSecret;
-                  existing.refreshToken = json.refresh_token;
-                  fs.writeFileSync(credPath, JSON.stringify(existing, null, 2), 'utf-8');
-                  console.log('✓ Successfully saved Refresh Token to cloud-credentials.json');
+                  const output = {
+                    clientId: detectedClientId,
+                    clientSecret: detectedClientSecret,
+                    refreshToken: json.refresh_token,
+                  };
+                  fs.writeFileSync(CLOUD_CREDS_PATH, JSON.stringify(output, null, 2), 'utf-8');
+                  console.log('✓ Saved to cloud-credentials.json (single source of truth)');
+                  console.log('\nAll family devices will now connect and sync automatically with ZERO login prompts!\n');
                 } catch (writeErr) {
-                  console.warn('Could not auto-write cloud-credentials.json:', writeErr.message);
+                  console.warn('Could not write cloud-credentials.json:', writeErr.message);
                 }
-
-                // Auto-generate src/services/cloudBackup/localCredentials.ts for mobile app & APK builds
-                try {
-                  const localCredsPath = path.join(ROOT_DIR, 'src', 'services', 'cloudBackup', 'localCredentials.ts');
-                  const localCredsContent = `export const LOCAL_CREDENTIALS = {\n  clientId: '${detectedClientId}',\n  clientSecret: '${detectedClientSecret}',\n  refreshToken: '${json.refresh_token}',\n};\n`;
-                  fs.writeFileSync(localCredsPath, localCredsContent, 'utf-8');
-                  console.log('✓ Successfully generated src/services/cloudBackup/localCredentials.ts');
-                } catch (writeErr) {
-                  console.warn('Could not auto-write localCredentials.ts:', writeErr.message);
-                }
-
-                console.log('\nAll family devices will now connect and sync automatically with ZERO login prompts!\n');
               } else {
                 console.error('Google response:', json);
                 if (json.error) {
@@ -202,7 +193,6 @@ const server = http.createServer((req, res) => {
         console.error('Token request error:', e);
         process.exit(1);
       });
-
       tokenReq.write(postData);
       tokenReq.end();
     }
