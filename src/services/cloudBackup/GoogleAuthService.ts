@@ -95,9 +95,13 @@ export const GoogleAuthService = {
 
   /**
    * Retrieves the effective Refresh Token.
-   * Priority: SecureStore -> AsyncStorage -> config.SHARED_CREDENTIALS
+   * Priority: config.SHARED_CREDENTIALS -> SecureStore -> AsyncStorage
    */
   async getRefreshToken(): Promise<string | null> {
+    if (CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.REFRESH_TOKEN?.trim()) {
+      return CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.REFRESH_TOKEN.trim();
+    }
+
     try {
       const stored = await this.getSecureItem(CLOUD_BACKUP_CONFIG.SECURE_KEYS.REFRESH_TOKEN);
       if (stored && stored.trim()) {
@@ -109,10 +113,6 @@ export const GoogleAuthService = {
       }
     } catch (e) {
       // ignore
-    }
-
-    if (CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.REFRESH_TOKEN?.trim()) {
-      return CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.REFRESH_TOKEN.trim();
     }
 
     return null;
@@ -269,12 +269,22 @@ export const GoogleAuthService = {
    */
   async refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
     try {
-      const clientId = await this.getClientId();
-      if (!clientId) {
-        return null;
+      let clientId = await this.getClientId();
+      let clientSecret = await this.getClientSecret();
+
+      // If refreshing the central shared family token, strictly use the matching shared credentials
+      if (
+        CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.REFRESH_TOKEN &&
+        refreshToken === CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.REFRESH_TOKEN
+      ) {
+        clientId = CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.CLIENT_ID;
+        clientSecret = CLOUD_BACKUP_CONFIG.SHARED_CREDENTIALS.CLIENT_SECRET;
       }
 
-      const clientSecret = await this.getClientSecret();
+      if (!clientId) {
+        console.warn('Cannot refresh access token: Google OAuth Client ID is missing.');
+        return null;
+      }
 
       const params: Record<string, string> = {
         client_id: clientId,

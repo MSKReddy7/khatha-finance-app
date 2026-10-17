@@ -44,4 +44,6 @@ yarn-error.*
 client_secret_*.json
 credentials.json
 credentials/
+src/services/cloudBackup/localCredentials.ts
+
 

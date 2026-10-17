@@ -7,9 +7,17 @@ let localCreds: {
 
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  localCreds = require('../../../credentials/cloud-credentials.json');
+  const mod = require('./localCredentials');
+  if (mod && mod.LOCAL_CREDENTIALS) {
+    localCreds = mod.LOCAL_CREDENTIALS;
+  }
 } catch (e) {
-  // credentials file absent in clean clones
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    localCreds = require('../../../credentials/cloud-credentials.json');
+  } catch (e2) {
+    // Clean clone fallback
+  }
 }
 
 export const CLOUD_BACKUP_CONFIG = {
