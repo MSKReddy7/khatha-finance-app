@@ -155,9 +155,19 @@ const server = http.createServer((req, res) => {
                   existing.clientSecret = detectedClientSecret;
                   existing.refreshToken = json.refresh_token;
                   fs.writeFileSync(credPath, JSON.stringify(existing, null, 2), 'utf-8');
-                  console.log('✓ Successfully saved Refresh Token to credentials/cloud-credentials.json!');
+                  console.log('✓ Successfully saved Refresh Token to credentials/cloud-credentials.json');
                 } catch (writeErr) {
                   console.warn('Could not auto-write credentials file:', writeErr.message);
+                }
+
+                // Auto-generate src/services/cloudBackup/localCredentials.ts for mobile app & APK builds
+                try {
+                  const localCredsPath = path.join(__dirname, '..', 'src', 'services', 'cloudBackup', 'localCredentials.ts');
+                  const localCredsContent = `export const LOCAL_CREDENTIALS = {\n  clientId: '${detectedClientId}',\n  clientSecret: '${detectedClientSecret}',\n  refreshToken: '${json.refresh_token}',\n};\n`;
+                  fs.writeFileSync(localCredsPath, localCredsContent, 'utf-8');
+                  console.log('✓ Successfully generated src/services/cloudBackup/localCredentials.ts');
+                } catch (writeErr) {
+                  console.warn('Could not auto-write localCredentials.ts:', writeErr.message);
                 }
 
                 console.log('\nAll family devices will now connect and sync automatically with ZERO login prompts!\n');

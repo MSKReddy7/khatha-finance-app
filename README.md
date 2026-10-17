@@ -234,17 +234,68 @@ The initialization logic is in `src/database/sqlite.ts` and runs when the app st
 
 ## Backup and Restore
 
-The app exports and imports backup data in JSON format.
+The app supports both offline file export/import and automated Google Drive Cloud Backup.
 
-### Export backup
+### 1. Google Drive Cloud Backup (Zero-Touch Multi-Device)
 
-- From the Settings screen, choose the export option.
-- The app writes a JSON backup file to the app document directory and shares it through the native share sheet.
+Khatha Finance includes a production-grade, zero-touch Google Drive backup system:
+- **Direct Drive REST API v3 Integration:** Connects directly from the device to Google Drive under the minimal `drive.file` scope.
+- **Zero-Touch Background Mode:** All family devices sync automatically to a central Google Drive without prompting any family member to sign in.
+- **SHA-256 Change Detection:** Calculates a deterministic hash of all tables and skips uploading if no financial mutations occurred.
+- **Sequential Global IDs:** Coordinates IDs (`{id} {deviceName} {timestamp}.json`) via an optimistic concurrency manifest (`_khatha_backup_sequence.json`).
+- **Per-Device Retention Policy:** Retains the 10 most recent backups for each device while protecting other devices' backups.
+- **Atomic Replace & Rollback:** When restoring from cloud, SQLite replaces the database atomically with an automatic rollback safeguard if restore fails.
 
-### Import backup
+#### Setting up Google Drive Backup after Cloning
 
-- From the Settings screen, choose the import option.
-- The app reads a JSON backup and restores the books, contacts, and transactions into SQLite.
+When you clone this repository to a new computer:
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up Google Cloud OAuth Credentials:**
+   - Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
+   - Create an OAuth 2.0 Client ID of type **Desktop application**.
+   - Download the client secret JSON file or note down your `client_id` and `client_secret`.
+   - Make sure your project's OAuth Consent screen is set to **In production** (Publish App) so your tokens never expire.
+
+3. **Configure the credentials (Choose Option A or B):**
+
+   - **Option A (Automatic - Recommended):**
+     Place the downloaded `client_secret_*.json` into the root folder of this project and run:
+     ```bash
+     node scripts/get-refresh-token.js
+     ```
+     Your browser will open. Log in to your central Google Account once and click **Allow**. The script will automatically generate your permanent Refresh Token and create `src/services/cloudBackup/localCredentials.ts` and `credentials/cloud-credentials.json`!
+
+   - **Option B (Manual template copy):**
+     Copy the template file:
+     ```bash
+     cp src/services/cloudBackup/localCredentials.example.ts src/services/cloudBackup/localCredentials.ts
+     ```
+     Then open `localCredentials.ts` and fill in your `clientId`, `clientSecret`, and `refreshToken`.
+
+4. **Run the App:**
+   ```bash
+   npm start
+   ```
+   Open **Settings → Google Drive Cloud Backup**. You will see:
+   ```text
+   ✓ Google Drive (Family Cloud) · Active
+   ```
+
+5. **Build APK for Family Members:**
+   ```bash
+   npx eas build --platform android --profile preview
+   ```
+   EAS will compile an installable `.apk` file with the zero-touch credentials pre-bundled. Share the download link or `.apk` on WhatsApp or Telegram with your family!
+
+### 2. Manual JSON File Export & Import (Offline)
+
+- **Export backup:** From the Settings screen, choose Export. The app writes a canonical JSON snapshot and shares it via the native share sheet.
+- **Import backup:** From the Settings screen, choose Import. The app restores books, contacts, and transactions into SQLite.
 
 ## Localization
 

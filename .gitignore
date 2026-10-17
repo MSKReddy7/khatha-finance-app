@@ -43,7 +43,8 @@ yarn-error.*
 # Google OAuth secrets & keystores
 client_secret_*.json
 credentials.json
-credentials/
+credentials/*
+!credentials/*.example.json
 src/services/cloudBackup/localCredentials.ts
 
 
