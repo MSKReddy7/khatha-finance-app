@@ -266,16 +266,18 @@ When you clone this repository to a new computer:
    - **Option A (Automatic - Recommended):**
      Place the downloaded `client_secret_*.json` into the root folder of this project and run:
      ```bash
-     node scripts/get-refresh-token.js
+     node src/scripts/get-refresh-token.js
      ```
-     Your browser will open. Log in to your central Google Account once and click **Allow**. The script will automatically generate your permanent Refresh Token and create `src/services/cloudBackup/localCredentials.ts` and `credentials/cloud-credentials.json`!
+     Your browser will open. Log in to your central Google Account once and click **Allow**. The script will automatically generate your permanent Refresh Token and save it to both `cloud-credentials.json` and `src/services/cloudBackup/localCredentials.ts`!
 
    - **Option B (Manual template copy):**
-     Copy the template file:
+     Copy either of the template files:
      ```bash
+     cp cloud-credentials.example.json cloud-credentials.json
+     # or
      cp src/services/cloudBackup/localCredentials.example.ts src/services/cloudBackup/localCredentials.ts
      ```
-     Then open `localCredentials.ts` and fill in your `clientId`, `clientSecret`, and `refreshToken`.
+     Then open the file and fill in your `clientId`, `clientSecret`, and `refreshToken`.
 
 4. **Run the App:**
    ```bash

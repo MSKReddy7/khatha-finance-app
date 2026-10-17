@@ -17,26 +17,41 @@ console.log('\n============================================================');
 console.log('🔑 KHATHA FINANCE: GOOGLE REFRESH TOKEN GENERATOR');
 console.log('============================================================\n');
 
-// Detect Client credentials from credentials/cloud-credentials.json or downloaded client_secret JSONs
+const ROOT_DIR = path.join(__dirname, '..', '..');
+
+// Detect Client credentials from cloud-credentials.json, credentials/cloud-credentials.json, or downloaded client_secret JSONs
 let detectedClientId = '';
 let detectedClientSecret = '';
 
+// 1. Check root cloud-credentials.json
 try {
-  const credPath = path.join(__dirname, '..', 'credentials', 'cloud-credentials.json');
+  const credPath = path.join(ROOT_DIR, 'cloud-credentials.json');
   if (fs.existsSync(credPath)) {
     const creds = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
-    if (creds.clientId) detectedClientId = creds.clientId;
-    if (creds.clientSecret) detectedClientSecret = creds.clientSecret;
+    if (creds.clientId && !creds.clientId.startsWith('YOUR_')) detectedClientId = creds.clientId;
+    if (creds.clientSecret && !creds.clientSecret.startsWith('YOUR_')) detectedClientSecret = creds.clientSecret;
   }
 } catch (e) {}
 
-// Scan for client_secret JSON with client_secret present if not yet found
+// 2. Check credentials/cloud-credentials.json fallback
 if (!detectedClientId || !detectedClientSecret) {
   try {
-    const rootFiles = fs.readdirSync(path.join(__dirname, '..'));
+    const credPath = path.join(ROOT_DIR, 'credentials', 'cloud-credentials.json');
+    if (fs.existsSync(credPath)) {
+      const creds = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+      if (creds.clientId && !creds.clientId.startsWith('YOUR_')) detectedClientId = creds.clientId;
+      if (creds.clientSecret && !creds.clientSecret.startsWith('YOUR_')) detectedClientSecret = creds.clientSecret;
+    }
+  } catch (e) {}
+}
+
+// 3. Scan for client_secret JSON with client_secret present if not yet found
+if (!detectedClientId || !detectedClientSecret) {
+  try {
+    const rootFiles = fs.readdirSync(ROOT_DIR);
     const secretFiles = rootFiles.filter((f) => f.startsWith('client_secret_') && f.endsWith('.json'));
     for (const sf of secretFiles) {
-      const raw = fs.readFileSync(path.join(__dirname, '..', sf), 'utf-8');
+      const raw = fs.readFileSync(path.join(ROOT_DIR, sf), 'utf-8');
       const parsed = JSON.parse(raw);
       const clientConfig = parsed.installed || parsed.web;
       if (clientConfig && clientConfig.client_secret) {
@@ -142,11 +157,9 @@ const server = http.createServer((req, res) => {
                 console.log('============================================================\n');
                 console.log(`REFRESH_TOKEN: ${json.refresh_token}\n`);
 
-                // Auto-update credentials/cloud-credentials.json
+                // Auto-update root cloud-credentials.json
                 try {
-                  const credDir = path.join(__dirname, '..', 'credentials');
-                  if (!fs.existsSync(credDir)) fs.mkdirSync(credDir, { recursive: true });
-                  const credPath = path.join(credDir, 'cloud-credentials.json');
+                  const credPath = path.join(ROOT_DIR, 'cloud-credentials.json');
                   let existing = {};
                   if (fs.existsSync(credPath)) {
                     try { existing = JSON.parse(fs.readFileSync(credPath, 'utf-8')); } catch (e) {}
@@ -155,14 +168,14 @@ const server = http.createServer((req, res) => {
                   existing.clientSecret = detectedClientSecret;
                   existing.refreshToken = json.refresh_token;
                   fs.writeFileSync(credPath, JSON.stringify(existing, null, 2), 'utf-8');
-                  console.log('✓ Successfully saved Refresh Token to credentials/cloud-credentials.json');
+                  console.log('✓ Successfully saved Refresh Token to cloud-credentials.json');
                 } catch (writeErr) {
-                  console.warn('Could not auto-write credentials file:', writeErr.message);
+                  console.warn('Could not auto-write cloud-credentials.json:', writeErr.message);
                 }
 
                 // Auto-generate src/services/cloudBackup/localCredentials.ts for mobile app & APK builds
                 try {
-                  const localCredsPath = path.join(__dirname, '..', 'src', 'services', 'cloudBackup', 'localCredentials.ts');
+                  const localCredsPath = path.join(ROOT_DIR, 'src', 'services', 'cloudBackup', 'localCredentials.ts');
                   const localCredsContent = `export const LOCAL_CREDENTIALS = {\n  clientId: '${detectedClientId}',\n  clientSecret: '${detectedClientSecret}',\n  refreshToken: '${json.refresh_token}',\n};\n`;
                   fs.writeFileSync(localCredsPath, localCredsContent, 'utf-8');
                   console.log('✓ Successfully generated src/services/cloudBackup/localCredentials.ts');

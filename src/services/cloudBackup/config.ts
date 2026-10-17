@@ -14,9 +14,14 @@ try {
 } catch (e) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    localCreds = require('../../../credentials/cloud-credentials.json');
+    localCreds = require('../../../cloud-credentials.json');
   } catch (e2) {
-    // Clean clone fallback
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      localCreds = require('../../../credentials/cloud-credentials.json');
+    } catch (e3) {
+      // Clean clone fallback
+    }
   }
 }
 
