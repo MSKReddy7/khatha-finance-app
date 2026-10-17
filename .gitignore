@@ -46,7 +46,7 @@ credentials.json
 credentials/
 cloud-credentials.json
 !cloud-credentials.example.json
-src/services/cloudBackup/localCredentials.ts
+
 
 
 
