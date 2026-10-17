@@ -8,6 +8,7 @@ import { useSettingsStore } from './src/store';
 import { initDatabase } from './src/database/sqlite';
 import { useAppTheme } from './src/hooks/useAppTheme';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { CloudBackupManager } from './src/services/cloudBackup/CloudBackupManager';
 import i18n from './src/translations';
 
 // Keep the splash screen visible while we finish loading
@@ -48,6 +49,8 @@ export default function App() {
     if (dbReady) {
       // Hide splash screen once the app is ready
       SplashScreen.hideAsync();
+      // Initialize Cloud Backup service, check authentication and pending retries
+      CloudBackupManager.initialize();
     }
   }, [dbReady]);
 

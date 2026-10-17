@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "react-native": ["./mocks/react-native.ts"],
+      "@react-native-async-storage/async-storage": ["./mocks/async-storage.ts"]
+    }
+  }
+}

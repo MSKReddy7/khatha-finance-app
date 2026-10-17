@@ -13,8 +13,9 @@ import {
   IconButton,
 } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSettingsStore, useDataStore } from '../store';
+import { useCloudBackupStore } from '../store/cloudBackupStore';
 import { BackupService } from '../services/BackupService';
 import { DatabaseService } from '../services/DatabaseService';
 import { LanguageCode, AppThemeMode, Book } from '../types';
@@ -28,6 +29,10 @@ export const SettingsScreen: React.FC = () => {
   const triggerRefresh = useDataStore((state) => state.triggerRefresh);
   const refreshKey = useDataStore((state) => state.refreshKey);
   const isFocused = useIsFocused();
+  const navigation = useNavigation<any>();
+
+  const isCloudConnected = useCloudBackupStore((state) => state.isConnected);
+  const cloudUserEmail = useCloudBackupStore((state) => state.userEmail);
 
   const [langDialogVisible, setLangDialogVisible] = useState(false);
   const [themeDialogVisible, setThemeDialogVisible] = useState(false);
@@ -193,6 +198,48 @@ export const SettingsScreen: React.FC = () => {
               />
             ))
           )}
+        </Card>
+      </List.Section>
+
+      <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+
+      {/* ── Cloud Backup & Sync Section ── */}
+      <List.Section style={styles.listSection}>
+        <List.Subheader style={[styles.subheader, { color: theme.colors.primary }]}>
+          ☁️ {t('cloudBackup.sectionTitle')}
+        </List.Subheader>
+        <Card
+          style={[
+            styles.sectionCard,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: isCloudConnected ? theme.colors.primary : theme.colors.border,
+              borderWidth: 1,
+            },
+          ]}
+          elevation={0}
+        >
+          <List.Item
+            title={t('cloudBackup.title')}
+            description={
+              isCloudConnected
+                ? `${t('cloudBackup.connected')}: ${cloudUserEmail || ''}`
+                : t('cloudBackup.notConnectedDesc')
+            }
+            descriptionStyle={{
+              color: isCloudConnected ? theme.colors.primary : theme.colors.outline,
+              fontWeight: '600',
+            }}
+            left={(props) => (
+              <List.Icon
+                {...props}
+                icon="google-drive"
+                color={isCloudConnected ? '#0F9D58' : theme.colors.outline}
+              />
+            )}
+            right={(props) => <List.Icon {...props} icon="chevron-right" color={theme.colors.outline} />}
+            onPress={() => navigation.navigate('CloudBackup')}
+          />
         </Card>
       </List.Section>
 

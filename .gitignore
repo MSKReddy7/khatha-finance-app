@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Google OAuth secrets & keystores
+client_secret_*.json
+credentials.json
+credentials/
+

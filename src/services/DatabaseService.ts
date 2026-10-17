@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { getDb } from '../database/sqlite';
 import { Book, Contact, Transaction, TransactionType } from '../types';
+import { CloudBackupManager } from './cloudBackup/CloudBackupManager';
 
 const isWeb = Platform.OS === 'web';
 
@@ -24,6 +25,8 @@ export const DatabaseService = {
       [id, name, description, now, now]
     );
 
+    CloudBackupManager.scheduleBackup('mutation');
+
     return {
       id,
       name,
@@ -43,12 +46,14 @@ export const DatabaseService = {
       'UPDATE books SET name = ?, description = ?, updated_at = ? WHERE id = ?',
       [name, description, now, id]
     );
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async deleteBook(id: string): Promise<void> {
     const db = getDb();
     // ON DELETE CASCADE will handle contacts and transactions
     await db.runAsync('DELETE FROM books WHERE id = ?', [id]);
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async archiveBook(id: string): Promise<void> {
@@ -58,6 +63,7 @@ export const DatabaseService = {
       'UPDATE books SET is_archived = 1, updated_at = ? WHERE id = ?',
       [now, id]
     );
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async restoreBook(id: string): Promise<void> {
@@ -67,6 +73,7 @@ export const DatabaseService = {
       'UPDATE books SET is_archived = 0, updated_at = ? WHERE id = ?',
       [now, id]
     );
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async getBooks(includeArchived = false): Promise<Book[]> {
@@ -127,6 +134,8 @@ export const DatabaseService = {
     // Update book updated_at
     await db.runAsync('UPDATE books SET updated_at = ? WHERE id = ?', [now, bookId]);
 
+    CloudBackupManager.scheduleBackup('mutation');
+
     return {
       id,
       book_id: bookId,
@@ -162,6 +171,7 @@ export const DatabaseService = {
     if (contact) {
       await db.runAsync('UPDATE books SET updated_at = ? WHERE id = ?', [now, contact.book_id]);
     }
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async deleteContact(id: string): Promise<void> {
@@ -173,6 +183,7 @@ export const DatabaseService = {
       const now = new Date().toISOString();
       await db.runAsync('UPDATE books SET updated_at = ? WHERE id = ?', [now, contact.book_id]);
     }
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async getContactsInBook(bookId: string): Promise<Contact[]> {
@@ -242,6 +253,8 @@ export const DatabaseService = {
       await db.runAsync('UPDATE books SET updated_at = ? WHERE id = ?', [now, contact.book_id]);
     }
 
+    CloudBackupManager.scheduleBackup('mutation');
+
     return {
       id,
       contact_id: contactId,
@@ -277,6 +290,7 @@ export const DatabaseService = {
         await db.runAsync('UPDATE books SET updated_at = ? WHERE id = ?', [now, contact.book_id]);
       }
     }
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async deleteTransaction(id: string): Promise<void> {
@@ -292,6 +306,7 @@ export const DatabaseService = {
         await db.runAsync('UPDATE books SET updated_at = ? WHERE id = ?', [now, contact.book_id]);
       }
     }
+    CloudBackupManager.scheduleBackup('mutation');
   },
 
   async getTransactionsForContact(contactId: string): Promise<Transaction[]> {
@@ -536,5 +551,7 @@ export const DatabaseService = {
       // Re-enable foreign keys
       await db.execAsync('PRAGMA foreign_keys = ON;');
     });
+
+    CloudBackupManager.scheduleBackup('mutation');
   }
 };

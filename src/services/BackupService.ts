@@ -2,20 +2,49 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { DatabaseService } from './DatabaseService';
+import { DatabaseSnapshot } from './cloudBackup/DatabaseSnapshot';
+import { DeviceIdentity } from './cloudBackup/DeviceIdentity';
+import { CompleteBackupPackage, BackupMetadata } from './cloudBackup/types';
+import { CloudBackupManager } from './cloudBackup/CloudBackupManager';
 
 export const BackupService = {
   /**
    * Exports the entire database schema (books, contacts, transactions)
-   * into a JSON file and opens the native share sheet.
+   * into a formatted JSON backup file with metadata and opens the native share sheet.
    */
   async exportBackup(): Promise<void> {
     try {
-      const data = await DatabaseService.getRawDatabaseData();
-      const jsonStr = JSON.stringify(data, null, 2);
-      
+      const data = await DatabaseSnapshot.readConsistentData();
+      const contentHash = await DatabaseSnapshot.computeContentHash(data);
+      const { deviceId, deviceName } = await DeviceIdentity.getDeviceInfo();
+      const now = new Date();
+
+      const metadata: BackupMetadata = {
+        format: 'khatha-backup',
+        version: 1,
+        backupId: 0, // 0 denotes a local manual export
+        deviceId,
+        deviceName,
+        createdAt: now.toISOString(),
+        appName: 'Khatha Finance',
+        schemaVersion: 1,
+        contentHash,
+        recordCounts: {
+          books: data.books.length,
+          contacts: data.contacts.length,
+          transactions: data.transactions.length,
+        },
+      };
+
+      const backupPackage: CompleteBackupPackage = {
+        metadata,
+        data,
+      };
+
+      const jsonStr = JSON.stringify(backupPackage, null, 2);
       const fileName = `khatha_backup_${Date.now()}.json`;
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-      
+
       await FileSystem.writeAsStringAsync(fileUri, jsonStr, {
         encoding: FileSystem.EncodingType.UTF8,
       });
@@ -37,7 +66,9 @@ export const BackupService = {
 
   /**
    * Prompts the user to pick a JSON backup file,
-   * validates its structure, and restores it to the database.
+   * validates its structure (supporting both legacy and wrapped formats),
+   * and safely restores it to the database with transaction protection.
+   * Schedules a cloud backup after successful import.
    * Returns true if import succeeded, false if cancelled.
    */
   async importBackup(): Promise<boolean> {
@@ -56,24 +87,24 @@ export const BackupService = {
         encoding: FileSystem.EncodingType.UTF8,
       });
 
-      const parsed = JSON.parse(content);
-
-      // Validate schema structure
-      if (
-        !parsed ||
-        !Array.isArray(parsed.books) ||
-        !Array.isArray(parsed.contacts) ||
-        !Array.isArray(parsed.transactions)
-      ) {
-        throw new Error('Invalid backup file format: Missing expected database tables');
+      let parsed: any;
+      try {
+        parsed = JSON.parse(content);
+      } catch (parseErr) {
+        throw new Error('Invalid JSON file');
       }
 
-      // Restore data inside database
-      await DatabaseService.restoreRawDatabaseData({
-        books: parsed.books,
-        contacts: parsed.contacts,
-        transactions: parsed.transactions,
-      });
+      // Validate schema and foreign key integrity using DatabaseSnapshot validator
+      const validation = DatabaseSnapshot.validateBackupPayload(parsed);
+      if (!validation.isValid || !validation.normalizedData) {
+        throw new Error(validation.error || 'Invalid backup file format');
+      }
+
+      // Safely replace database contents
+      await DatabaseService.restoreRawDatabaseData(validation.normalizedData);
+
+      // Trigger cloud backup schedule because local data changed
+      CloudBackupManager.scheduleBackup('mutation');
 
       return true;
     } catch (error) {

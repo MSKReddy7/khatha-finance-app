@@ -59,6 +59,12 @@ export type BooksStackParamList = {
   AddTransaction: { contactId: string; transactionId?: string; initialType?: TransactionType };
 };
 
+// Settings Tab Stack Navigation
+export type SettingsStackParamList = {
+  SettingsHome: undefined;
+  CloudBackup: undefined;
+};
+
 export type TabParamList = {
   BooksTab: undefined;
   Settings: undefined;
@@ -66,3 +72,4 @@ export type TabParamList = {
 
 // Keep for backward compat (used in navigation.navigate from ContactDetails)
 export type RootStackParamList = BooksStackParamList;
+

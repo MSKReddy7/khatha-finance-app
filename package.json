@@ -12,13 +12,19 @@
     "@react-navigation/native-stack": "^7.17.5",
     "dayjs": "^1.11.21",
     "expo": "~57.0.22",
+    "expo-auth-session": "~57.0.16",
+    "expo-crypto": "~57.0.4",
+    "expo-dev-client": "~57.0.20",
     "expo-document-picker": "~57.0.2",
     "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.4",
+    "expo-network": "~57.0.2",
+    "expo-secure-store": "~57.0.4",
     "expo-sharing": "~57.0.19",
     "expo-splash-screen": "~57.0.9",
     "expo-sqlite": "~57.0.3",
     "expo-status-bar": "~57.0.1",
+    "expo-web-browser": "~57.0.3",
     "i18next": "^26.3.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -33,6 +39,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },
@@ -40,7 +47,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "npx tsx tests/run-all-tests.ts",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }

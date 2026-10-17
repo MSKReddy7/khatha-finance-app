@@ -2,9 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { useTheme, IconButton } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { BooksStackParamList, TabParamList } from '../types';
+import { BooksStackParamList, SettingsStackParamList, TabParamList } from '../types';
 
 // Screens
 import { BooksScreen } from '../screens/BooksScreen';
@@ -13,10 +13,12 @@ import { ContactDetailsScreen } from '../screens/ContactDetailsScreen';
 import { AddTransactionScreen } from '../screens/AddTransactionScreen';
 import { BookReportsScreen } from '../screens/BookReportsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { CloudBackupScreen } from '../screens/CloudBackupScreen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const BooksStack = createNativeStackNavigator<BooksStackParamList>();
+const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 
 // Inner stack navigator for the Books tab
 const BooksNavigator = () => {
@@ -70,6 +72,37 @@ const BooksNavigator = () => {
   );
 };
 
+// Inner stack navigator for the Settings tab
+const SettingsNavigator = () => {
+  const { t } = useTranslation();
+  const theme = useTheme() as any;
+
+  const headerStyle = {
+    backgroundColor: theme.colors.background,
+  };
+  const headerOptions = {
+    headerStyle,
+    headerShadowVisible: false,
+    headerTintColor: theme.colors.onSurface,
+    headerTitleStyle: { fontWeight: '800' as const, fontSize: 20 },
+  };
+
+  return (
+    <SettingsStack.Navigator screenOptions={headerOptions}>
+      <SettingsStack.Screen
+        name="SettingsHome"
+        component={SettingsScreen}
+        options={{ title: t('settings.title') }}
+      />
+      <SettingsStack.Screen
+        name="CloudBackup"
+        component={CloudBackupScreen}
+        options={{ title: t('cloudBackup.title') }}
+      />
+    </SettingsStack.Navigator>
+  );
+};
+
 export const AppNavigator = () => {
   const { t } = useTranslation();
   const theme = useTheme() as any;
@@ -112,15 +145,10 @@ export const AppNavigator = () => {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsNavigator}
         options={{
           tabBarLabel: t('settings.title'),
-          headerShown: true,
-          headerTitle: t('settings.title'),
-          headerStyle: { backgroundColor: theme.colors.background },
-          headerShadowVisible: false,
-          headerTintColor: theme.colors.onSurface,
-          headerTitleStyle: { fontWeight: '800', fontSize: 20 },
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
