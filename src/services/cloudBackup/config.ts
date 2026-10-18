@@ -40,7 +40,7 @@ export const CLOUD_BACKUP_CONFIG = {
   RETENTION_PER_DEVICE: 10,
 
   // Debounce timing
-  MUTATION_DEBOUNCE_MS: 3000,
+  MUTATION_DEBOUNCE_MS: 1500,
 
   // Storage Keys for AsyncStorage (Non-sensitive)
   STORAGE_KEYS: {

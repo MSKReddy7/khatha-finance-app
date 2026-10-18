@@ -15,6 +15,7 @@ import { CompleteBackupPackage, BackupMetadata } from './types';
 class CloudBackupManagerClass {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private isExecuting = false;
+  private needsRerun = false;
 
   /**
    * Initializes the cloud backup subsystem on application startup.
@@ -58,6 +59,7 @@ class CloudBackupManagerClass {
 
   /**
    * Schedules a backup with debouncing for frequent database mutations.
+   * If a backup is already executing, sets a flag to trigger immediately upon completion.
    */
   scheduleBackup(reason: 'mutation' | 'manual' | 'retry' = 'mutation'): void {
     const store = useCloudBackupStore.getState();
@@ -65,6 +67,13 @@ class CloudBackupManagerClass {
     // Mark pending in store & storage immediately
     store.setPending(true);
     AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING, 'true').catch(() => {});
+
+    // If currently executing, queue a rerun for when the active backup finishes
+    if (this.isExecuting) {
+      console.log('Cloud backup is currently uploading. Queuing follow-up backup for recent mutations.');
+      this.needsRerun = true;
+      return;
+    }
 
     if (reason === 'manual') {
       if (this.debounceTimer) {
@@ -94,7 +103,8 @@ class CloudBackupManagerClass {
 
     // Serialization: prevent concurrent runs
     if (this.isExecuting) {
-      console.log('Cloud backup is already executing. Queuing retry.');
+      console.log('Cloud backup is already executing. Queuing follow-up backup.');
+      this.needsRerun = true;
       return { success: false, error: 'Backup already in progress' };
     }
 
@@ -105,7 +115,6 @@ class CloudBackupManagerClass {
       const isAuthed = await GoogleAuthService.isAuthenticated();
       if (!isAuthed) {
         store.setStatus('auth_required', 'Google authorization required');
-        this.isExecuting = false;
         return { success: false, error: 'Not authenticated with Google' };
       }
 
@@ -114,7 +123,6 @@ class CloudBackupManagerClass {
         const netState = await Network.getNetworkStateAsync();
         if (!netState.isConnected || !netState.isInternetReachable) {
           store.setStatus('offline', 'Device is offline. Backup will sync when online.');
-          this.isExecuting = false;
           return { success: false, error: 'Device is offline' };
         }
       } catch (netErr) {
@@ -131,10 +139,11 @@ class CloudBackupManagerClass {
       // 4. Skip upload if data has not changed
       if (lastHash && lastHash === contentHash && reason !== 'manual') {
         console.log('Database content hash matches last backup. Skipping upload.');
-        await AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING, 'false');
-        store.setPending(false);
+        if (!this.needsRerun) {
+          await AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING, 'false');
+          store.setPending(false);
+        }
         store.setStatus('idle', 'No changes detected. Database is up to date.');
-        this.isExecuting = false;
         return { success: true, skipped: true };
       }
 
@@ -190,9 +199,11 @@ class CloudBackupManagerClass {
       // 9. Update local sync state
       await AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.LAST_BACKUP_HASH, contentHash);
       await AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.LAST_BACKUP_TIME, utcCreatedAt);
-      await AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING, 'false');
+      if (!this.needsRerun) {
+        await AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING, 'false');
+        store.setPending(false);
+      }
       store.setLastBackup(utcCreatedAt, contentHash);
-      store.setPending(false);
 
       // 10. Enforce retention (keep latest 10 backups for this device)
       try {
@@ -205,14 +216,19 @@ class CloudBackupManagerClass {
       await this.refreshBackupsList();
 
       store.setStatus('success', `Backup #${backupId} saved successfully.`);
-      this.isExecuting = false;
       return { success: true };
     } catch (error: any) {
       console.error('Error during performBackup:', error);
       const msg = error.message || 'Backup failed';
       store.setStatus('error', msg);
-      this.isExecuting = false;
       return { success: false, error: msg };
+    } finally {
+      this.isExecuting = false;
+      if (this.needsRerun) {
+        this.needsRerun = false;
+        console.log('Running queued backup for mutations that occurred during previous upload...');
+        this.scheduleBackup('mutation');
+      }
     }
   }
 
