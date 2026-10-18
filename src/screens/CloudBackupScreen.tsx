@@ -20,7 +20,7 @@ import {
   Banner,
 } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useCloudBackupStore } from '../store/cloudBackupStore';
 import { CloudBackupManager } from '../services/cloudBackup/CloudBackupManager';
 import { GoogleAuthService } from '../services/cloudBackup/GoogleAuthService';
@@ -32,6 +32,7 @@ export const CloudBackupScreen: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme() as any;
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
 
   const {
     status,
@@ -69,6 +70,13 @@ export const CloudBackupScreen: React.FC = () => {
   useEffect(() => {
     CloudBackupManager.initialize();
   }, []);
+
+  // Refresh backup list whenever screen gains focus
+  useEffect(() => {
+    if (isFocused && isConnected) {
+      CloudBackupManager.refreshBackupsList().catch(() => {});
+    }
+  }, [isFocused, isConnected]);
 
   useEffect(() => {
     setNewDeviceName(deviceName);

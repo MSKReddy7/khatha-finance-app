@@ -18,6 +18,7 @@ import { useSettingsStore, useDataStore } from '../store';
 import { useCloudBackupStore } from '../store/cloudBackupStore';
 import { BackupService } from '../services/BackupService';
 import { DatabaseService } from '../services/DatabaseService';
+import { CloudBackupManager } from '../services/cloudBackup/CloudBackupManager';
 import { LanguageCode, AppThemeMode, Book } from '../types';
 import i18n from '../translations';
 
@@ -51,6 +52,7 @@ export const SettingsScreen: React.FC = () => {
   useEffect(() => {
     if (isFocused) {
       loadArchivedBooks();
+      CloudBackupManager.refreshBackupsList().catch(() => {});
     }
   }, [isFocused, refreshKey]);
 
