@@ -2,9 +2,20 @@ import * as SQLite from 'expo-sqlite';
 
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 
+export const setDb = (db: SQLite.SQLiteDatabase): void => {
+  dbInstance = db;
+};
+
 export const getDb = (): SQLite.SQLiteDatabase => {
   if (!dbInstance) {
-    dbInstance = SQLite.openDatabaseSync('khatha.db');
+    try {
+      dbInstance = SQLite.openDatabaseSync('khatha.db');
+    } catch (e) {
+      console.warn('openDatabaseSync not supported or failed, waiting for SQLiteProvider:', e);
+    }
+  }
+  if (!dbInstance) {
+    throw new Error('Database is not initialized yet. Please ensure SQLiteProvider has loaded.');
   }
   return dbInstance;
 };
@@ -14,6 +25,7 @@ export const getDb = (): SQLite.SQLiteDatabase => {
  * This runs automatically when the SQLiteProvider starts up.
  */
 export const initDatabase = async (db: SQLite.SQLiteDatabase): Promise<void> => {
+  dbInstance = db;
   try {
     // Enable Foreign Key support
     await db.execAsync('PRAGMA foreign_keys = ON;');

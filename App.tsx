@@ -56,7 +56,7 @@ export default function App() {
 
   return (
     <SQLiteProvider databaseName="khatha.db" onInit={onInit}>
-      <AppContent />
+      {dbReady ? <AppContent /> : null}
     </SQLiteProvider>
   );
 }
