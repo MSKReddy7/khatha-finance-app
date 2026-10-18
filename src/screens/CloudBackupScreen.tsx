@@ -122,30 +122,6 @@ export const CloudBackupScreen: React.FC = () => {
     }
   };
 
-  // Connect / Sign In with Google (optional manual flow)
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsActionLoading(true);
-      const res = await GoogleAuthService.promptLogin();
-      if (res.success) {
-        await CloudBackupManager.initialize();
-        await CloudBackupManager.refreshBackupsList();
-        Alert.alert(t('common.success'), t('cloudBackup.connectedSuccess'));
-      } else {
-        if (res.error && !res.error.includes('cancelled')) {
-          if (res.error.includes('Client ID is not configured')) {
-            openCredentialsDialog();
-          } else {
-            Alert.alert(t('common.error'), res.error);
-          }
-        }
-      }
-    } catch (err: any) {
-      Alert.alert(t('common.error'), err.message || 'Authentication failed');
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
 
   // Sign out / Disconnect
   const handleSignOut = () => {
@@ -388,26 +364,14 @@ export const CloudBackupScreen: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <>
-                <Button
-                  mode="contained"
-                  icon="key"
-                  style={{ flex: 2, marginRight: 8 }}
-                  onPress={openCredentialsDialog}
-                >
-                  Enter Credentials
-                </Button>
-                <Button
-                  mode="outlined"
-                  icon="google"
-                  loading={isActionLoading}
-                  disabled={isActionLoading}
-                  style={{ flex: 1 }}
-                  onPress={handleGoogleSignIn}
-                >
-                  Sign In
-                </Button>
-              </>
+              <Button
+                mode="contained"
+                icon="key"
+                style={{ flex: 1 }}
+                onPress={openCredentialsDialog}
+              >
+                Enter Credentials
+              </Button>
             )}
           </View>
         </Card.Content>

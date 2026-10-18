@@ -104,62 +104,51 @@ Follow these steps in Google Cloud Console to enable Drive access for the app:
 
 ---
 
-## 5. OAuth Client ID Creation and Redirect URI Configuration
+## 5. OAuth Client ID Creation (Single Client Setup)
 
-Google requires creating OAuth 2.0 Client IDs for mobile/web apps.
+Khatha Finance uses a single Google OAuth 2.0 Client ID for all operations (both in Expo Go and compiled Android APKs):
 
-### Creating an OAuth 2.0 Client ID
+### Creating the OAuth 2.0 Client ID:
 
-1. Go to **APIs & Services > Credentials**.
+1. Go to **APIs & Services > Credentials** in [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
 2. Click **+ Create Credentials > OAuth client ID**.
-3. Choose Application Type based on your development and deployment target:
+3. Set **Application type**: **Desktop application**.
+4. **Name**: `Khatha Finance Desktop Client`.
+5. Click **Create**.
+6. Download the JSON file (named `client_secret_*.json`) or copy your **Client ID** and **Client Secret**.
 
-#### Option A: Web Application (Works in Expo Go and Web)
-- **Application type**: **Web application**
-- **Name**: `Khatha Finance Web / Expo Client`
-- **Authorized redirect URIs**:
-  - For Expo Go development: `https://auth.expo.io/@mskreddy/demo` (or your Expo username/slug)
-  - For standalone builds with custom scheme: `khathafinance://oauthredirect`
-- Click **Create**.
-- Copy the generated **Client ID** (e.g. `123456789-abcdef.apps.googleusercontent.com`).
-
-#### Option B: Android Native Client (For Android APK / Production Builds)
-- **Application type**: **Android**
-- **Name**: `Khatha Finance Android`
-- **Package name**: `com.mskreddy.finance` (defined in `app.json`)
-- **SHA-1 certificate fingerprint**: Run `npx eas credentials` or keytool to obtain your build certificate's SHA-1.
-- Click **Create**.
-
-> [!IMPORTANT]
-> In installed mobile applications using PKCE, the **Client ID is public** and does not require a secret. **Never configure or embed a Client Secret in the mobile app.**
+> [!NOTE]
+> **Why Desktop application?**
+> - It is the **only client type needed** for the entire project.
+> - It allows the initial setup script to run a local loopback server (`http://localhost`) and securely exchange the OAuth authorization code for a long-lived `refreshToken`.
+> - Both Expo Go and standalone Android APKs use this client to silently mint short-lived access tokens directly against Google's REST API without showing any Google login dialogs to users.
+> - You do **NOT** need a Web Client or an Android Client in the Google Cloud Console.
 
 ---
 
----
+## 6. Zero-Touch Mode: Single Source of Truth (`cloud-credentials.json`)
 
-## 6. Zero-Touch Mode: Pre-configured Credentials (No Sign-In Required for Family Members)
+To allow all family members to use the app **without any "Sign in with Google" prompts, popups, or Google accounts on their devices**, credentials are read directly from `cloud-credentials.json` in the project root:
 
-To allow all ~10 family members to use the app **without any "Sign in with Google" prompts, popups, or Google accounts on their devices**, we use **Pre-configured Shared Credentials**:
+### Quick Setup with Token Generator:
 
-### How to Get Your Refresh Token in 1 Minute:
-
-1. In your project terminal, run:
+1. Drop your downloaded `client_secret_*.json` file directly into the project root folder.
+2. In your terminal, run:
    ```bash
-   node scripts/get-refresh-token.js
+   node src/scripts/get-refresh-token.js
    ```
-2. Enter your Google OAuth **Client Secret** (from your Google Cloud Console Credentials page).
-3. The script will automatically open your browser.
-4. Log into the **dedicated central family backup Google account** and approve access.
-5. The terminal will immediately print your `REFRESH_TOKEN`!
-6. Open [`src/services/cloudBackup/config.ts`](file:///c:/Users/mskre/Desktop/khatha-finance-app/src/services/cloudBackup/config.ts) and paste the values into `SHARED_CREDENTIALS`:
+3. The script will automatically open your default browser.
+4. Log into the **dedicated central backup Google account** and approve Drive access.
+5. The script automatically creates/overwrites **`cloud-credentials.json`** with:
    ```json
    {
      "clientId": "YOUR_GOOGLE_DESKTOP_CLIENT_ID.apps.googleusercontent.com",
      "clientSecret": "YOUR_GOOGLE_DESKTOP_CLIENT_SECRET",
-     "refreshToken": "YOUR_GENERATED_REFRESH_TOKEN",
-     "expoGoClientId": "OPTIONAL_WEB_CLIENT_ID.apps.googleusercontent.com"
+     "refreshToken": "YOUR_GENERATED_REFRESH_TOKEN"
    }
    ```
+
+*(Manual alternative: Copy [`cloud-credentials.example.json`](../cloud-credentials.example.json) to `cloud-credentials.json` and paste your `clientId`, `clientSecret`, and `refreshToken`).*
 
 ### What happens now:
 - Every family member who opens the app is **instantly connected** to the central Drive backup folder.

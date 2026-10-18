@@ -2,7 +2,6 @@ let localCreds: {
   clientId?: string;
   clientSecret?: string;
   refreshToken?: string;
-  expoGoClientId?: string;
 } = {};
 
 // Single source of truth: cloud-credentials.json in project root
@@ -71,7 +70,5 @@ export const CLOUD_BACKUP_CONFIG = {
     REFRESH_TOKEN: localCreds.refreshToken || '',
   },
 
-  // Web Client ID used for Expo Go interactive sign-in fallback if needed
-  EXPO_GO_CLIENT_ID: localCreds.expoGoClientId || '',
-  DEFAULT_CLIENT_ID: localCreds.expoGoClientId || '',
+  DEFAULT_CLIENT_ID: localCreds.clientId || '',
 };

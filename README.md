@@ -190,11 +190,10 @@ node src/scripts/get-refresh-token.js
 ```
 - Your default web browser will open to Google's sign-in screen.
 - Log in to your central Google Account once and click **Allow**.
-- The script automatically captures your permanent refresh token and updates:
-  - `cloud-credentials.json` (in root)
-  - `src/services/cloudBackup/localCredentials.ts`
+- The script automatically captures your permanent refresh token and saves:
+  - `cloud-credentials.json` (in the project root)
 
-*(Manual alternative: Copy [`cloud-credentials.example.json`](./cloud-credentials.example.json) to `cloud-credentials.json` or [`src/services/cloudBackup/localCredentials.example.ts`](./src/services/cloudBackup/localCredentials.example.ts) to `localCredentials.ts` and paste your credentials).*
+*(Manual alternative: Copy [`cloud-credentials.example.json`](./cloud-credentials.example.json) to `cloud-credentials.json` and paste your credentials).*
 
 ### Step 3: Verify in App
 Restart or reload the app (`r` in the terminal). Open **Settings → Google Drive Cloud Backup**. You will see:
