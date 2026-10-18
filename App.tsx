@@ -41,6 +41,8 @@ export default function App() {
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
+    let listenerStarted = false;
+
     async function prepare() {
       try {
         await initDatabase();
@@ -49,10 +51,22 @@ export default function App() {
       } finally {
         setAppReady(true);
         SplashScreen.hideAsync().catch(() => {});
-        CloudBackupManager.initialize();
+        await CloudBackupManager.initialize();
+        // Start listening to network broadcast events (Android ConnectivityManager, iOS Reachability)
+        // so the app automatically retries pending backups when internet is restored.
+        CloudBackupManager.startNetworkListener();
+        listenerStarted = true;
       }
     }
+
     prepare();
+
+    return () => {
+      // Cleanup: remove the network listener when the root component unmounts
+      if (listenerStarted) {
+        CloudBackupManager.stopNetworkListener();
+      }
+    };
   }, []);
 
   if (!appReady) {

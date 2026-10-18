@@ -11,11 +11,14 @@ import { GoogleDriveService } from './GoogleDriveService';
 import { RetentionService } from './RetentionService';
 import { SequenceCoordinator } from './SequenceCoordinator';
 import { CompleteBackupPackage, BackupMetadata } from './types';
+import { EventSubscription } from 'expo-modules-core';
 
 class CloudBackupManagerClass {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private isExecuting = false;
   private needsRerun = false;
+  private networkSubscription: EventSubscription | null = null;
+  private wasConnected: boolean | null = null; // null = unknown (first reading)
 
   /**
    * Initializes the cloud backup subsystem on application startup.
@@ -54,6 +57,81 @@ class CloudBackupManagerClass {
       }
     } catch (error) {
       console.warn('Error during CloudBackupManager initialization:', error);
+    }
+  }
+
+  /**
+   * Starts listening to Android/iOS network broadcast events.
+   * Triggers a backup retry automatically whenever the device regains internet
+   * connectivity and either a backup is pending or data is un-synced.
+   */
+  startNetworkListener(): void {
+    if (this.networkSubscription) return; // already subscribed
+
+    this.networkSubscription = Network.addNetworkStateListener(async (state) => {
+      const isNowConnected = !!(state.isConnected && state.isInternetReachable);
+
+      // Update the store's offline indicator
+      const store = useCloudBackupStore.getState();
+      if (!isNowConnected) {
+        store.setStatus('offline', 'Device is offline. Backup will sync when online.');
+      }
+
+      // Only act on offline → online transitions
+      if (!isNowConnected) {
+        this.wasConnected = false;
+        return;
+      }
+
+      const wasOffline = this.wasConnected === false;
+      this.wasConnected = true;
+
+      if (!wasOffline) return; // Already knew we were online — nothing to react to
+
+      console.log('Network restored. Checking for pending backup...');
+
+      try {
+        const isAuthed = await GoogleAuthService.isAuthenticated();
+        if (!isAuthed) return;
+
+        const pendingStr = await AsyncStorage.getItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING);
+        const lastHash = await AsyncStorage.getItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.LAST_BACKUP_HASH);
+
+        let hasUnsynced = pendingStr === 'true';
+
+        // Also check if live data hash differs from last backup hash (covers missed mutations)
+        if (!hasUnsynced && lastHash) {
+          try {
+            const snapshot = await DatabaseSnapshot.readConsistentData();
+            const currentHash = await DatabaseSnapshot.computeContentHash(snapshot);
+            if (currentHash !== lastHash) {
+              console.log('Data hash mismatch detected on network restore — scheduling backup.');
+              hasUnsynced = true;
+            }
+          } catch (_) { /* non-critical */ }
+        }
+
+        if (hasUnsynced) {
+          console.log('Pending/unsynced data found. Triggering backup after network restore.');
+          this.scheduleBackup('retry');
+        }
+      } catch (err) {
+        console.warn('Network restore handler error:', err);
+      }
+    });
+
+    console.log('Network state listener started.');
+  }
+
+  /**
+   * Removes the network connectivity listener.
+   */
+  stopNetworkListener(): void {
+    if (this.networkSubscription) {
+      this.networkSubscription.remove();
+      this.networkSubscription = null;
+      this.wasConnected = null;
+      console.log('Network state listener stopped.');
     }
   }
 
