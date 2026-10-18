@@ -152,12 +152,13 @@ To allow all ~10 family members to use the app **without any "Sign in with Googl
 4. Log into the **dedicated central family backup Google account** and approve access.
 5. The terminal will immediately print your `REFRESH_TOKEN`!
 6. Open [`src/services/cloudBackup/config.ts`](file:///c:/Users/mskre/Desktop/khatha-finance-app/src/services/cloudBackup/config.ts) and paste the values into `SHARED_CREDENTIALS`:
-   ```typescript
-   SHARED_CREDENTIALS: {
-     CLIENT_ID: '706881866190-5bpnh51uj4r1apu6qq4dj97bahe0s65b.apps.googleusercontent.com',
-     CLIENT_SECRET: 'YOUR_CLIENT_SECRET',
-     REFRESH_TOKEN: '1//0g...YOUR_REFRESH_TOKEN...',
-   },
+   ```json
+   {
+     "clientId": "YOUR_GOOGLE_DESKTOP_CLIENT_ID.apps.googleusercontent.com",
+     "clientSecret": "YOUR_GOOGLE_DESKTOP_CLIENT_SECRET",
+     "refreshToken": "YOUR_GENERATED_REFRESH_TOKEN",
+     "expoGoClientId": "OPTIONAL_WEB_CLIENT_ID.apps.googleusercontent.com"
+   }
    ```
 
 ### What happens now:
