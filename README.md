@@ -101,20 +101,18 @@ khatha-finance-app/
 │   ├── navigation/                          # React Navigation stacks & tabs
 │   │   └── AppNavigator.tsx
 │   ├── screens/                             # Application views
-│   │   ├── DashboardScreen.tsx
-│   │   ├── BooksScreen.tsx
-│   │   ├── ContactsScreen.tsx
-│   │   ├── TransactionsScreen.tsx
-│   │   ├── ReportsScreen.tsx
-│   │   ├── SettingsScreen.tsx
+│   │   ├── BooksScreen.tsx                  # Books list & management
+│   │   ├── BookDetailsScreen.tsx            # Contacts within a book & balances
+│   │   ├── BookReportsScreen.tsx            # Transaction analytics & debtors
+│   │   ├── ContactDetailsScreen.tsx         # Customer ledger & transaction history
+│   │   ├── AddTransactionScreen.tsx         # Give / Receive transaction entry
+│   │   ├── SettingsScreen.tsx               # App preferences & local backups
 │   │   └── CloudBackupScreen.tsx            # Google Drive backup & restore management
 │   ├── scripts/                             # Utility scripts
 │   │   └── get-refresh-token.js             # Helper to generate permanent Google Refresh Tokens
 │   ├── services/                            # Application business logic
 │   │   ├── DatabaseService.ts               # Core SQLite queries & transactions
 │   │   ├── BackupService.ts                 # Offline JSON export & import
-│   │   ├── ExportService.ts                 # File sharing & export helpers
-│   │   ├── ReportService.ts                 # Balance & report calculations
 │   │   └── cloudBackup/                     # Google Drive Cloud Backup Subsystem
 │   │       ├── CloudBackupManager.ts        # Orchestrator & mutation listeners
 │   │       ├── DatabaseSnapshot.ts          # Deterministic serialization & SHA-256
@@ -123,6 +121,7 @@ khatha-finance-app/
 │   │       ├── GoogleDriveService.ts        # Direct REST API v3 multipart upload/download
 │   │       ├── RetentionService.ts          # Per-device backup pruning (keep latest 10)
 │   │       ├── SequenceCoordinator.ts       # Global sequence allocation with ETags
+│   │       └── config.ts                    # Google Drive endpoints & OAuth settings
 │   │       ├── config.ts                    # Cloud backup configuration & endpoints
 │   │       ├── localCredentials.example.ts  # TypeScript credential template
 │   │       └── types.ts                     # TypeScript interfaces
