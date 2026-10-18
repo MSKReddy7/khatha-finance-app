@@ -132,23 +132,29 @@ To allow all family members to use the app **without any "Sign in with Google" p
 
 ### Quick Setup with Token Generator:
 
-1. Drop your downloaded `client_secret_*.json` file directly into the project root folder.
+1. Drop your downloaded `client_secret_*.json` file directly into the project root folder (or copy [`cloud-credentials.example.json`](../cloud-credentials.example.json) to `cloud-credentials.json` with only `clientId` and `clientSecret`).
+   ```json
+   {
+     "clientId": "YOUR_GOOGLE_DESKTOP_CLIENT_ID.apps.googleusercontent.com",
+     "clientSecret": "YOUR_GOOGLE_DESKTOP_CLIENT_SECRET"
+   }
+   ```
 2. In your terminal, run:
    ```bash
    node src/scripts/get-refresh-token.js
    ```
+   *(If credentials are not found in a file, the script will prompt you interactively in the terminal).*
 3. The script will automatically open your default browser.
 4. Log into the **dedicated central backup Google account** and approve Drive access.
-5. The script automatically creates/overwrites **`cloud-credentials.json`** with:
+5. Upon successful authorization, the script **automatically appends** `refreshToken` to **`cloud-credentials.json`**:
    ```json
    {
      "clientId": "YOUR_GOOGLE_DESKTOP_CLIENT_ID.apps.googleusercontent.com",
      "clientSecret": "YOUR_GOOGLE_DESKTOP_CLIENT_SECRET",
-     "refreshToken": "YOUR_GENERATED_REFRESH_TOKEN"
+     "refreshToken": "1//0g...YOUR_REFRESH_TOKEN..."
    }
    ```
-
-*(Manual alternative: Copy [`cloud-credentials.example.json`](../cloud-credentials.example.json) to `cloud-credentials.json` and paste your `clientId`, `clientSecret`, and `refreshToken`).*
+   *(Until authorization succeeds, no `refreshToken` key exists in the file).*
 
 ### What happens now:
 - Every family member who opens the app is **instantly connected** to the central Drive backup folder.
