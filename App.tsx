@@ -1,7 +1,7 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { SQLiteProvider } from 'expo-sqlite';
 import { PaperProvider } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { useSettingsStore } from './src/store';
@@ -12,7 +12,7 @@ import { CloudBackupManager } from './src/services/cloudBackup/CloudBackupManage
 import i18n from './src/translations';
 
 // Keep the splash screen visible while we finish loading
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // App content wrapper that consumes context, hooks and navigation
 const AppContent = () => {
@@ -38,25 +38,30 @@ const AppContent = () => {
 };
 
 export default function App() {
-  const [dbReady, setDbReady] = useState(false);
-
-  const onInit = useCallback(async (db: any) => {
-    await initDatabase(db);
-    setDbReady(true);
-  }, []);
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    if (dbReady) {
-      // Hide splash screen once the app is ready
-      SplashScreen.hideAsync();
-      // Initialize Cloud Backup service, check authentication and pending retries
-      CloudBackupManager.initialize();
+    async function prepare() {
+      try {
+        await initDatabase();
+      } catch (e) {
+        console.error('Failed to initialize database on startup:', e);
+      } finally {
+        setAppReady(true);
+        SplashScreen.hideAsync().catch(() => {});
+        CloudBackupManager.initialize();
+      }
     }
-  }, [dbReady]);
+    prepare();
+  }, []);
 
-  return (
-    <SQLiteProvider databaseName="khatha.db" onInit={onInit}>
-      {dbReady ? <AppContent /> : null}
-    </SQLiteProvider>
-  );
+  if (!appReady) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0A1628', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+      </View>
+    );
+  }
+
+  return <AppContent />;
 }
