@@ -68,24 +68,15 @@ class CloudBackupManagerClass {
     store.setPending(true);
     AsyncStorage.setItem(CLOUD_BACKUP_CONFIG.STORAGE_KEYS.BACKUP_PENDING, 'true').catch(() => {});
 
-    // If currently executing, queue a rerun for when the active backup finishes
-    if (this.isExecuting) {
-      console.log('Cloud backup is currently uploading. Queuing follow-up backup for recent mutations.');
+    // If currently executing an upload or already waiting on a timer, queue follow-up backup
+    if (this.isExecuting || this.debounceTimer) {
       this.needsRerun = true;
       return;
     }
 
     if (reason === 'manual') {
-      if (this.debounceTimer) {
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = null;
-      }
       this.performBackup('manual');
       return;
-    }
-
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
     }
 
     this.debounceTimer = setTimeout(() => {

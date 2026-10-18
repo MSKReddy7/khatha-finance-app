@@ -51,6 +51,7 @@ export const AddTransactionScreen: React.FC = () => {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(getTransactionSchema(t)) as any,
@@ -69,14 +70,23 @@ export const AddTransactionScreen: React.FC = () => {
     if (transactionId) {
       DatabaseService.getTransactionById(transactionId).then((tx) => {
         if (tx) {
-          setValue('type', tx.type);
-          setValue('amount', tx.amount.toString());
-          setValue('note', tx.note || '');
-          setValue('date', dayjs(tx.transaction_date).format('YYYY-MM-DD'));
+          reset({
+            type: tx.type,
+            amount: tx.amount.toString(),
+            note: tx.note || '',
+            date: dayjs(tx.transaction_date).format('YYYY-MM-DD'),
+          });
         }
       });
+    } else {
+      reset({
+        type: initialType || 'GAVE',
+        amount: '',
+        note: '',
+        date: dayjs().format('YYYY-MM-DD'),
+      });
     }
-  }, [transactionId]);
+  }, [transactionId, initialType, reset]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
